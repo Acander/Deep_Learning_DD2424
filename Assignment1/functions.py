@@ -1,25 +1,25 @@
 import numpy as np
 
 def softmax(x):
-    """ Standard definition of the softmax function """
-    return np.exp(x) / np.sum(np.exp(x), axis=0)
+	""" Standard definition of the softmax function """
+	return np.exp(x) / np.sum(np.exp(x), axis=0)
 
 def LoadBatch(filename):
 	""" Copied from the dataset website """
-    import pickle
-    with open('Dataset/'+filename, 'rb') as fo:
-        dict = pickle.load(fo, encoding='bytes')
-    return dict
+	import pickle
+	with open('Datasets/cifar-10-batches-py/' + filename, 'rb') as fo:
+		dict = pickle.load(fo, encoding='bytes')
+		return dict
 
 def ComputeGradsNum(X, Y, P, W, b, lamda, h):
 	""" Converted from matlab code """
 	no 	= 	W.shape[0]
 	d 	= 	X.shape[0]
 
-	grad_W = np.zeros(W.shape);
-	grad_b = np.zeros((no, 1));
+	grad_W = np.zeros(W.shape)
+	grad_b = np.zeros((no, 1))
 
-	c = ComputeCost(X, Y, W, b, lamda);
+	c = ComputeCost(X, Y, W, b, lamda)
 	
 	for i in range(len(b)):
 		b_try = np.array(b)
@@ -75,7 +75,7 @@ def montage(W):
 	fig, ax = plt.subplots(2,5)
 	for i in range(2):
 		for j in range(5):
-			im  = W[i+j,:].reshape(32,32,3, order='F')
+			im  = W[5*i+j,:].reshape(32,32,3, order='F')
 			sim = (im-np.min(im[:]))/(np.max(im[:])-np.min(im[:]))
 			sim = sim.transpose(1,0,2)
 			ax[i][j].imshow(sim, interpolation='nearest')
@@ -86,4 +86,4 @@ def montage(W):
 def save_as_mat(data, name="model"):
 	""" Used to transfer a python model to matlab """
 	import scipy.io as sio
-	sio.savemat(name'.mat',{name:b})
+	sio.savemat(name + '.mat',{name:b})
