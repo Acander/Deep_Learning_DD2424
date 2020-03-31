@@ -1,5 +1,5 @@
-from Assignment1.functions import LoadBatch
 from Assignment1.functions import softmax
+from Assignment1.functions import LoadBatch
 import numpy as np
 
 LEARNING_RATE = 0.1
@@ -43,7 +43,7 @@ class NeuralNet:
 
         return norm_factor * sum_entropy + penalty_term
 
-    def cross_entropy(selfs, s, y):
+    def cross_entropy(self, s, y):
         # s: network_output
         # y: expected output - one-hot encoding
         P = softmax(s)
@@ -60,6 +60,13 @@ class NeuralNet:
                 correct_answers += 1
 
         return correct_answers / np.size(P, axis=1)
+
+    def compute_gradients(self, X_batch, Y_batch, penalty_factor):
+        P_batch = self.evaluate_classifier(X_batch)
+        G_batch = -np.transpose(Y_batch-P_batch)
+        gradient_W = 1/np.size(X_batch)*G_batch*np.transpose(X_batch)
+        gradient_b = 1/np.size(X_batch)*G_batch*np.identity(np.size(X_batch, axis=1))
+        return [gradient_W + 2*penalty_factor*np.delete(self.weights, np.size(self.weights, axis=1)-1, 1), gradient_b]
 
 
 # n is the number of images
@@ -115,13 +122,12 @@ def ComputeAccuracy(X, y, W, b):
 
 
 def ComputeGradients(X, Y, P, W, penalty_factor):
-
     grad_W = 0
     grad_b = 0
     return [grad_W, grad_b]
 
 if __name__ == '__main__':
-    training_data = load_batch('data_batch_1')
+    '''training_data = load_batch('data_batch_1')
     validation_data = load_batch('data_batch_2')
     test_data = load_batch('test_batch')
 
@@ -140,13 +146,15 @@ if __name__ == '__main__':
     penalty_factor = 0.001
     J = neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor)
 
-    print(J)
+    print(J)'''
 
-    '''W = [[0, 0],
-        [0, 0],
-        [0, 0]]
+    W = [[0, 0, 1],
+        [0, 0, 1],
+        [0, 0, 1]]
     print(W)
-    b = [1, 1, 1]
-    b = np.array(b).reshape(np.size(b), 1)
-    print(b)
-    print(np.column_stack((W, b)))'''
+    #b = [1, 1, 1]
+    #b = np.array(b).reshape(np.size(b), 1)
+    print(np.delete(W, np.size(W, axis=1)-1, 1))
+    print(W)
+    #print(b)
+    #print(np.column_stack((W, b)))
