@@ -111,8 +111,14 @@ def ComputeCost(X, Y, W, b, penalty_factor):
 def ComputeAccuracy(X, y, W, b):
     input_size, output_size = getDataSize(W)
     neural_net = NeuralNet(0, input_size, output_size, weights=W, bias=b)
-    return neural_net.compute_cost(X, y)
+    return neural_net.compute_accuracy(X, y)
 
+
+def ComputeGradients(X, Y, P, W, penalty_factor):
+
+    grad_W = 0
+    grad_b = 0
+    return [grad_W, grad_b]
 
 if __name__ == '__main__':
     training_data = load_batch('data_batch_1')
