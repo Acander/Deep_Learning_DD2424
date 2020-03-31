@@ -10,10 +10,10 @@ class NeuralNet:
     def __init__(self, learning_rate, input_size, output_size, weights=0, bias=0):
         self.lr = learning_rate
         mu, sigma = 0, 0.01
-        #self.bias = np.random.normal(mu, sigma, output_size)
-        #self.weights = np.random.normal(mu, sigma, (output_size, input_size))
+        # self.bias = np.random.normal(mu, sigma, output_size)
+        # self.weights = np.random.normal(mu, sigma, (output_size, input_size))
         if weights is 0:
-            self.weights = np.random.normal(mu, sigma, (output_size, input_size+1))
+            self.weights = np.random.normal(mu, sigma, (output_size, input_size + 1))
         else:
             bias = np.array(bias).reshape(np.size(bias), 1)
             print(bias)
@@ -28,7 +28,7 @@ class NeuralNet:
         return S
 
     def compute_cost(self, X, Y, penalty_factor):
-        norm_factor = 1/np.size(X, axis=1)
+        norm_factor = 1 / np.size(X, axis=1)
         S = NeuralNet.compute_input(self, X)
         sum_entropy = 0
 
@@ -39,22 +39,34 @@ class NeuralNet:
             sum_entropy += NeuralNet.cross_entropy(self, S[:, i], Y[:, i])
 
         # TODO: Should bias be included???, not removed from the weights
-        penalty_term = penalty_factor*np.sum(self.weights[..., :-1]*self.weights[..., :-1])
+        penalty_term = penalty_factor * np.sum(self.weights[..., :-1] * self.weights[..., :-1])
 
-        return norm_factor*sum_entropy + penalty_term
+        return norm_factor * sum_entropy + penalty_term
 
     def cross_entropy(selfs, s, y):
-        #s: network_output
-        #y: expected output - one-hot encoding
-        p = softmax(s)
-        return -np.log10(np.transpose(y).dot(p))
+        # s: network_output
+        # y: expected output - one-hot encoding
+        P = softmax(s)
+        return -np.log10(np.transpose(y).dot(P))
+
+    def compute_accuracy(self, X, y):
+        P = self.evaluate_classifier(X)
+        correct_answers = 0
+        assert np.size(P, axis=1) == np.size(X, axis=1)
+        assert np.size(P, axis=1) == np.size(y)
+        for i in range(np.size(P, axis=1)):
+            highest_output_node = np.where(P[:, i] == np.amax(P[:, i]))
+            if highest_output_node[0][0] == y[i]:
+                correct_answers += 1
+
+        return correct_answers / np.size(P, axis=1)
 
 
 # n is the number of images
 # d is the dimensionality of each image (3072=32x32x3)
 def load_batch(filename):
     dict = LoadBatch(filename)
-    X = np.array(dict[b'data']) # matrix, dim: image pixel data, # of images * dim
+    X = np.array(dict[b'data'])  # matrix, dim: image pixel data, # of images * dim
     # Y = matrix, diM: # of images * # of labels, one-hot representation
     y = np.array(dict[b'labels'])  # vector, contains labels, dim: # of images
 
@@ -71,8 +83,9 @@ def make_one_hot_encoding(batch_size, indices):
 
     return Y
 
-#TODO: Check if that mean becomes approximatly zero is okay
-#Standard Score? (X-mean)/std
+
+# TODO: Check if that mean becomes approximatly zero is okay
+# Standard Score? (X-mean)/std
 def pre_process(training_data):
     [X, Y, y] = training_data
     mean_X = np.mean(X, axis=0)
@@ -82,15 +95,23 @@ def pre_process(training_data):
     X = X / np.tile(std_X, (np.size(X, axis=0), 1))
     return [X, Y, y]
 
-def getDataSize(X, Y):
-    output_size = np.size(X, axis=0)
-    input_size = np.size(Y, axis=0)
+
+def getDataSize(W):
+    output_size = np.size(W, axis=0)
+    input_size = np.size(W, axis=1)
     return input_size, output_size
 
+
 def ComputeCost(X, Y, W, b, penalty_factor):
-    input_size, output_size = getDataSize(X, Y)
+    input_size, output_size = getDataSize(W)
     neural_net = NeuralNet(0, input_size, output_size, weights=W, bias=b)
     return neural_net.compute_cost(X, Y, penalty_factor)
+
+
+def ComputeAccuracy(X, y, W, b):
+    input_size, output_size = getDataSize(W)
+    neural_net = NeuralNet(0, input_size, output_size, weights=W, bias=b)
+    return neural_net.compute_cost(X, y)
 
 
 if __name__ == '__main__':
@@ -102,7 +123,7 @@ if __name__ == '__main__':
     processed_validation_data = pre_process(validation_data)
     processed_test_data = pre_process(test_data)
 
-    #print(np.size(processed_training_data[0], axis=1), np.size(processed_training_data[1], axis=1))
+    # print(np.size(processed_training_data[0], axis=1), np.size(processed_training_data[1], axis=1))
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
@@ -123,4 +144,3 @@ if __name__ == '__main__':
     b = np.array(b).reshape(np.size(b), 1)
     print(b)
     print(np.column_stack((W, b)))'''
-

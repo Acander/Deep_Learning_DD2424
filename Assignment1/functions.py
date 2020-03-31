@@ -1,4 +1,5 @@
 import numpy as np
+from Assignment1.assignment1 import ComputeCost
 
 def softmax(x):
 	""" Standard definition of the softmax function """
