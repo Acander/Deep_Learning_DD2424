@@ -15,6 +15,7 @@ class NeuralNet:
         if weights is 0:
             self.weights = np.random.normal(mu, sigma, (output_size, input_size + 1))
         else:
+            #print("I ran!")
             bias = np.array(bias).reshape(np.size(bias), 1)
             self.weights = np.column_stack((weights, bias))
 
@@ -29,25 +30,27 @@ class NeuralNet:
 
     def compute_cost(self, X, Y, P, penalty_factor):
         norm_factor = 1 / np.size(X, axis=1)
-        #S = NeuralNet.compute_input(self, X)
+        S = NeuralNet.compute_input(self, X)
         #print(S)
         sum_entropy = 0
 
-        assert np.size(Y, axis=1) == np.size(P, axis=1)
+        assert np.size(Y, axis=1) == np.size(S, axis=1)
 
         # print(np.size(S[:, 1]), np.size(Y[:, 1]))
         for i in range(np.size(Y, axis=1)):
-            sum_entropy += NeuralNet.cross_entropy(self, P[:, i], Y[:, i])
+            sum_entropy += NeuralNet.cross_entropy(self, S[:, i], Y[:, i])
             #print(sum_entropy)
 
         penalty_term = penalty_factor * np.sum(self.get_weights() * self.get_weights())
 
+        #print(sum_entropy)
         return norm_factor * sum_entropy + penalty_term
 
-    def cross_entropy(self, p, y):
+    def cross_entropy(self, s, y):
         # p: softmax output
         # y: expected output - one-hot encoding
-        return -np.log10(np.transpose(y).dot(p))
+        p = np.array(softmax(s))
+        return -np.log10(y.dot(p)[0])
 
     def compute_accuracy(self, X, y):
         P = self.evaluate_classifier(X)
@@ -137,6 +140,7 @@ def ComputeGradients(X, Y, penalty_factor, batch_size):
     batch_X = np.array(X[:, 0:0 + batch_size])
     batch_Y = np.array(Y[:, 0:0 + batch_size])
     P_batch = np.array(neural_net.evaluate_classifier(batch_X))
+    #print(P_batch)
     grad_analytiaclly = neural_net.compute_gradients(batch_X, batch_Y, P_batch, penalty_factor, batch_size)
     grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(),
                                            penalty_factor, np.exp(-6))
@@ -177,8 +181,12 @@ def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
     return [grad_W, grad_b]
 
 def gradient_difference(gradient_analytical, gradient_numeric, eps):
-    numerator = np.abs(gradient_analytical - gradient_numeric)
+    numerator = np.absolute(gradient_analytical - gradient_numeric)
     denominator = np.max(np.array([eps, (np.absolute(gradient_analytical) + np.absolute(gradient_numeric))]))
+    print("Numerator: ", numerator)
+    print("Denominator: ", denominator)
+    print("eps: ", eps)
+    print("abs: ", (np.absolute(gradient_analytical) + np.absolute(gradient_numeric)))
     return numerator/denominator
 
 
