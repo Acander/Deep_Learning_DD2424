@@ -2,13 +2,9 @@ from Assignment1.functions import softmax
 from Assignment1.functions import LoadBatch
 import numpy as np
 
-LEARNING_RATE = 0.1
-
-
 class NeuralNet:
 
-    def __init__(self, learning_rate, input_size, output_size, weights=0, bias=0):
-        self.lr = learning_rate
+    def __init__(self, input_size, output_size, weights=0, bias=0):
         mu, sigma = 0, 0.01
         # self.bias = np.random.normal(mu, sigma, output_size)
         # self.weights = np.random.normal(mu, sigma, (output_size, input_size))
@@ -28,7 +24,7 @@ class NeuralNet:
         S = self.get_weights().dot(X) + b.dot(sum_matrix)
         return S
 
-    def compute_cost(self, X, Y, P, penalty_factor):
+    def compute_cost(self, X, Y, penalty_factor):
         norm_factor = 1 / np.size(X, axis=1)
         S = NeuralNet.compute_input(self, X)
         #print(S)
@@ -40,7 +36,7 @@ class NeuralNet:
         for i in range(np.size(Y, axis=1)):
             sum_entropy += NeuralNet.cross_entropy(self, S[:, i], Y[:, i])
 
-        penalty_term = penalty_factor * np.sum(self.get_weights() * self.get_weights())
+        penalty_term = penalty_factor * np.sum(np.square(self.get_weights()))
         return norm_factor * sum_entropy + penalty_term
 
     def cross_entropy(self, s, y):
@@ -76,6 +72,32 @@ class NeuralNet:
     def get_bias(self):
         return np.array(self.weights[:, np.size(self.weights, axis=1) - 1])
 
+    def MiniBatchGD(self, X, Y, X_val, Y_val, penalty_factor, GDparams):
+        batch_size, eta, n_epochs = GDparams
+        train_loss = np.zeros(n_epochs)
+        validation_loss = np.zeros(n_epochs)
+        for i in range(n_epochs):
+            self.fit(X, Y, penalty_factor, eta, batch_size)
+            train_loss = self.compute_cost(X, Y, penalty_factor)
+            validation_loss = self.compute_cost(X_val, Y_val, penalty_factor)
+            print("Epoch: ", i)
+            print("Train_loss: ", train_loss)
+            print("Validation_loss: ", validation_loss)
+
+
+    def fit(self, X, Y, penalty_factor, eta, batchSize=-1):
+
+        if (batchSize == -1):
+            batchSize = X.shape[1]
+        for i in range(0, X.shape[1], batchSize):
+            batchX = X[:, i:i + batchSize]
+            batchY = Y[:, i:i + batchSize]
+            batchP = self.evaluate_classifier(batchX)
+            [grad_W, grad_b] = self.compute_gradients(batchX, batchY, batchP, penalty_factor, batchSize)
+            weights = self.get_weights() - eta*grad_W
+            bias = self.get_bias() - eta*grad_b
+            self.weights = np.column_stack((weights, bias))
+
 
 # n is the number of images
 # d is the dimensionality of each image (3072=32x32x3)
@@ -104,10 +126,11 @@ def make_one_hot_encoding(batch_size, indices):
 def pre_process(training_data):
     [X, Y, y] = training_data
     mean_X = np.mean(X, axis=0)
-    std_X = np.std(X, axis=0)
+    std_X = np.std(X, ddof=1, axis=0)
 
     X = X - np.tile(mean_X, (np.size(X, axis=0), 1))
     X = X / np.tile(std_X, (np.size(X, axis=0), 1))
+
     return [X, Y, y]
 
 
@@ -117,22 +140,22 @@ def getDataSize(W):
     return input_size, output_size
 
 
-def ComputeCost(X, Y, W, P, b, penalty_factor):
+def ComputeCost(X, Y, W, b, penalty_factor):
     input_size, output_size = getDataSize(W)
-    neural_net = NeuralNet(0, input_size, output_size, weights=W, bias=b)
-    return neural_net.compute_cost(X, Y, P, penalty_factor)
+    neural_net = NeuralNet(input_size, output_size, weights=W, bias=b)
+    return neural_net.compute_cost(X, Y, penalty_factor)
 
 
 def ComputeAccuracy(X, y, W, b):
     input_size, output_size = getDataSize(W)
-    neural_net = NeuralNet(0, input_size, output_size, weights=W, bias=b)
+    neural_net = NeuralNet(input_size, output_size, weights=W, bias=b)
     return neural_net.compute_accuracy(X, y)
 
 
 def ComputeGradients(X, Y, penalty_factor, batch_size):
     input_size = np.size(X, axis=0)
     output_size = np.size(Y, axis=0)
-    neural_net = NeuralNet(0, input_size, output_size)
+    neural_net = NeuralNet(input_size, output_size)
     batch_X = np.array(X[:, 0:0 + batch_size])
     batch_Y = np.array(Y[:, 0:0 + batch_size])
     P_batch = np.array(neural_net.evaluate_classifier(batch_X))
@@ -154,11 +177,11 @@ def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
     for i in range(len(b)):
         b_try = np.array(b)
         b_try[i] -= h
-        c1 = ComputeCost(X, Y, W, P, b_try, lamda)
+        c1 = ComputeCost(X, Y, W, b_try, lamda)
 
         b_try = np.array(b)
         b_try[i] += h
-        c2 = ComputeCost(X, Y, W, P, b_try, lamda)
+        c2 = ComputeCost(X, Y, W, b_try, lamda)
 
         grad_b[i] = (c2 - c1) / (2 * h)
 
@@ -166,11 +189,11 @@ def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
         for j in range(W.shape[1]):
             W_try = np.array(W)
             W_try[i, j] -= h
-            c1 = ComputeCost(X, Y, W_try, P, b, lamda)
+            c1 = ComputeCost(X, Y, W_try, b, lamda)
 
             W_try = np.array(W)
             W_try[i, j] += h
-            c2 = ComputeCost(X, Y, W_try, P, b, lamda)
+            c2 = ComputeCost(X, Y, W_try, b, lamda)
 
             grad_W[i, j] = (c2 - c1) / (2 * h)
 
@@ -200,7 +223,7 @@ def printOutGradients(grad_analytically, grad_numerically):
     print(grad_Wn)
     print(grad_bn)
 
-def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn):
+def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     print("Gradient differences:")
     print("Weights:")
     for i in range(np.size(grad_W, axis=0)):
@@ -224,10 +247,26 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
+    neural_net = NeuralNet(input_size, output_size)
 
+    tdi = processed_training_data[0]
+    tdl = processed_training_data[1]
+    vdi = processed_validation_data[0]
+    vdl = processed_validation_data[1]
+
+    batch_size = 200
+    eta = 0.1
+    n_epochs = 10
+    GDparams = batch_size, eta, n_epochs
+    penalty_factor = 0.01
+
+    neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
+
+    print("Final loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1], penalty_factor))
+
+    '''
     input_data = processed_training_data[0]
-
-    neural_net = NeuralNet(LEARNING_RATE, input_size, output_size)
+    neural_net = NeuralNet(input_size, output_size)
     penalty_factor = 0.1
     batch_size = 50
     grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1],
@@ -236,9 +275,9 @@ if __name__ == '__main__':
 
     eps = 0.001
     [grad_W, grad_b] = grad_analytically
-    [grad_Wn, grad_bn] = grad_numerically
+    [grad_Wn, grad_bn] = grad_numerically'''
 
-    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn)
+    #print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)
 
     #J = neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor)
 
