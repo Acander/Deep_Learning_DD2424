@@ -28,7 +28,6 @@ class NeuralNet:
     def compute_cost(self, X, Y, penalty_factor):
         norm_factor = 1 / np.size(X, axis=1)
         S = self.compute_input(X)
-        # print(S)
         sum_entropy = 0
 
         assert np.size(Y, axis=1) == np.size(S, axis=1)
@@ -44,6 +43,17 @@ class NeuralNet:
         # y: expected output - one-hot encoding
         p = np.array(softmax(s))
         return -np.log10(y.dot(p)[0])
+
+    def compute_total_loss(self, X, Y):
+        S = self.compute_input(X)
+        sum_entropy = 0
+
+        assert np.size(Y, axis=1) == np.size(S, axis=1)
+
+        for i in range(np.size(Y, axis=1)):
+            sum_entropy += self.cross_entropy(S[:, i], Y[:, i])
+
+        return sum_entropy
 
     def compute_accuracy(self, X, y):
         P = self.evaluate_classifier(X)
@@ -74,15 +84,20 @@ class NeuralNet:
 
     def MiniBatchGD(self, X, Y, X_val, Y_val, penalty_factor, GDparams):
         batch_size, eta, n_epochs = GDparams
+        # train_cost = np.zeros(n_epochs)
+        # validation_cost = np.zeros(n_epochs)
         train_loss = np.zeros(n_epochs)
         validation_loss = np.zeros(n_epochs)
         for i in range(n_epochs):
             self.fit(X, Y, penalty_factor, eta, batch_size)
-            ts = self.compute_cost(X, Y, penalty_factor)
-            vl = self.compute_cost(X_val, Y_val, penalty_factor)
-            train_loss[i] = ts
-            validation_loss[i] = vl
+            # ts = self.compute_cost(X, Y, penalty_factor)
+            # vl = self.compute_cost(X_val, Y_val, penalty_factor)
+            # train_cost[i] = ts
+            # validation_cost[i] = vl
+            train_loss[i] = self.compute_total_loss(X, Y)
+            validation_loss[i] = self.compute_total_loss(X_val, Y_val)
 
+        # return train_cost, validation_cost
         return train_loss, validation_loss
 
     def fit(self, X, Y, penalty_factor, eta, batchSize=-1):
@@ -115,6 +130,7 @@ def make_one_hot_encoding(batch_size, indices):
         Y[i][hot] = 1
 
     return Y
+
 
 def pre_process(training_data):
     [X, Y, y] = training_data
@@ -155,7 +171,8 @@ def ComputeGradients(X, Y, penalty_factor, batch_size):
     P_batch = np.array(neural_net.evaluate_classifier(batch_X))
 
     grad_analytiaclly = neural_net.compute_gradients(batch_X, batch_Y, P_batch, penalty_factor, batch_size)
-    grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(), penalty_factor, 0.000001)
+    grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(),
+                                           penalty_factor, 0.000001)
     return grad_analytiaclly, grad_numerically
 
 
@@ -230,7 +247,7 @@ def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
         print(gradient_difference(grad_b[i], grad_bn[i], eps))
 
 
-def plot_loss(train_loss, val_loss):
+def plot_cost(train_loss, val_loss):
     plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
     plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation Loss')
 
@@ -248,8 +265,29 @@ def plot_loss(train_loss, val_loss):
     plt.legend()
     plt.show()
 
+
+def plot_total_loss(train_loss, val_loss):
+    plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
+    plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation Loss')
+
+    xMin = 0
+    xMax = train_loss.size
+
+    yMin = np.min(np.concatenate((train_loss, val_loss)))
+    yMax = np.max(np.concatenate((train_loss, val_loss)))
+
+    plt.xlim(xMin, xMax)
+    plt.ylim(yMin, yMax)
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Total Loss')
+    plt.legend()
+    plt.show()
+
+
 def plot_weight_matrix(weight_matrix):
     montage(weight_matrix)
+
 
 if __name__ == '__main__':
     training_data = load_batch('data_batch_1')
@@ -275,9 +313,12 @@ if __name__ == '__main__':
     GDparams = batch_size, eta, n_epochs
     penalty_factor = 0
 
+    # train_cost, validation_cost = neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
+    # plot_cost(train_loss, validation_loss)
+
     train_loss, validation_loss = neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
-    plot_loss(train_loss, validation_loss)
-    plot_weight_matrix(neural_net.get_weights())
+    plot_total_loss(train_loss, validation_loss)
+    #plot_weight_matrix(neural_net.get_weights())
 
     print("-----------------------------")
     print("Final train loss: ",
@@ -291,7 +332,6 @@ if __name__ == '__main__':
     print("Final validation accuracy: ",
           neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
     print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
-
 
     '''neural_net = NeuralNet(input_size, output_size)
     penalty_factor = 0
