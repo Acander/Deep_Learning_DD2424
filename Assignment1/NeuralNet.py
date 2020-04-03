@@ -1,6 +1,7 @@
 from Assignment1.functions import softmax
 from Assignment1.functions import LoadBatch
 import numpy as np
+import matplotlib.pyplot as plt
 
 class NeuralNet:
 
@@ -78,11 +79,15 @@ class NeuralNet:
         validation_loss = np.zeros(n_epochs)
         for i in range(n_epochs):
             self.fit(X, Y, penalty_factor, eta, batch_size)
-            train_loss = self.compute_cost(X, Y, penalty_factor)
-            validation_loss = self.compute_cost(X_val, Y_val, penalty_factor)
+            ts = self.compute_cost(X, Y, penalty_factor)
+            vl = self.compute_cost(X_val, Y_val, penalty_factor)
             print("Epoch: ", i)
-            print("Train_loss: ", train_loss)
-            print("Validation_loss: ", validation_loss)
+            print("Train_loss: ", ts)
+            print("Validation_loss: ", vl)
+            train_loss[i] = ts
+            validation_loss[i] = vl
+
+        return train_loss, validation_loss
 
 
     def fit(self, X, Y, penalty_factor, eta, batchSize=-1):
@@ -234,6 +239,24 @@ def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     for i in range(np.size(grad_b, axis=0)):
         print(gradient_difference(grad_b[i], grad_bn[i], eps))
 
+def plot_loss(train_loss, val_loss):
+    plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
+    plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation Loss')
+
+    xMin = 0
+    xMax = train_loss.size
+
+    yMin = np.min(np.concatenate((train_loss, val_loss)))
+    yMax = np.max(np.concatenate((train_loss, val_loss)))
+
+    plt.xlim(xMin, xMax)
+    plt.ylim(yMin, yMax)
+
+    plt.xlabel('Epoch')
+    plt.ylabel('Cost')
+    plt.legend()
+    plt.show()
+
 if __name__ == '__main__':
     training_data = load_batch('data_batch_1')
     validation_data = load_batch('data_batch_2')
@@ -254,15 +277,24 @@ if __name__ == '__main__':
     vdi = processed_validation_data[0]
     vdl = processed_validation_data[1]
 
-    batch_size = 200
+    batch_size = 10
     eta = 0.1
-    n_epochs = 10
+    n_epochs = 100
     GDparams = batch_size, eta, n_epochs
     penalty_factor = 0.01
 
-    neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
+    train_loss, validation_loss = neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
+    plot_loss(train_loss, validation_loss)
 
-    print("Final loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1], penalty_factor))
+    print("-----------------------------")
+    print("Final train loss: ", neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor))
+    print("Final validation loss: ", neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1], penalty_factor))
+    print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1], penalty_factor))
+
+    print("------------------------------")
+    print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
+    print("Final validation accuracy: ", neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
+    print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
 
     '''
     input_data = processed_training_data[0]
