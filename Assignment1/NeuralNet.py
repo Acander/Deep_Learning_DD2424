@@ -1,18 +1,18 @@
 from Assignment1.functions import softmax
 from Assignment1.functions import LoadBatch
+from Assignment1.functions import montage
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 class NeuralNet:
 
     def __init__(self, input_size, output_size, weights=0, bias=0):
         mu, sigma = 0, 0.01
-        # self.bias = np.random.normal(mu, sigma, output_size)
-        # self.weights = np.random.normal(mu, sigma, (output_size, input_size))
         if weights is 0:
             self.weights = np.random.normal(mu, sigma, (output_size, input_size + 1))
         else:
-            #print("I ran!")
+            # print("I ran!")
             bias = np.array(bias).reshape(np.size(bias), 1)
             self.weights = np.column_stack((weights, bias))
 
@@ -28,12 +28,11 @@ class NeuralNet:
     def compute_cost(self, X, Y, penalty_factor):
         norm_factor = 1 / np.size(X, axis=1)
         S = self.compute_input(X)
-        #print(S)
+        # print(S)
         sum_entropy = 0
 
         assert np.size(Y, axis=1) == np.size(S, axis=1)
 
-        # print(np.size(S[:, 1]), np.size(Y[:, 1]))
         for i in range(np.size(Y, axis=1)):
             sum_entropy += self.cross_entropy(S[:, i], Y[:, i])
 
@@ -60,12 +59,8 @@ class NeuralNet:
 
     def compute_gradients(self, X_batch, Y_batch, P_batch, penalty_factor, batch_size):
         G_batch = np.array(-(Y_batch - P_batch))
-        '''print("Y_batch: ", Y_batch)
-        print("P_batch: ", P_batch)
-        print("G_batch: ", G_batch)
-        print("X_batch", X_batch)'''
-        gradient_W = G_batch.dot(X_batch.transpose())/batch_size
-        gradient_b = np.sum(G_batch, axis=1)/batch_size
+        gradient_W = G_batch.dot(X_batch.transpose()) / batch_size
+        gradient_b = np.sum(G_batch, axis=1) / batch_size
         return [gradient_W + 2 * penalty_factor * self.get_weights(),
                 gradient_b]
 
@@ -85,15 +80,10 @@ class NeuralNet:
             self.fit(X, Y, penalty_factor, eta, batch_size)
             ts = self.compute_cost(X, Y, penalty_factor)
             vl = self.compute_cost(X_val, Y_val, penalty_factor)
-            '''print("Epoch: ", i)
-            print("Train_loss: ", ts)
-            print("Validation_loss: ", vl)'''
             train_loss[i] = ts
             validation_loss[i] = vl
-            #print(self.weights)
 
         return train_loss, validation_loss
-
 
     def fit(self, X, Y, penalty_factor, eta, batchSize=-1):
 
@@ -103,24 +93,18 @@ class NeuralNet:
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX)
-            #print("Batch P before: ", batchP)
             [grad_W, grad_b] = self.compute_gradients(batchX, batchY, batchP, penalty_factor, batchSize)
-            weights = self.get_weights() - eta*grad_W
-            bias = self.get_bias() - eta*grad_b
+            weights = self.get_weights() - eta * grad_W
+            bias = self.get_bias() - eta * grad_b
             self.weights = np.column_stack((weights, bias))
 
 
-# n is the number of images
-# d is the dimensionality of each image (3072=32x32x3)
 def load_batch(filename):
     dict = LoadBatch(filename)
-    X = np.array(dict[b'data'])  # matrix, dim: image pixel data, # of images * dim
-    # Y = matrix, diM: # of images * # of labels, one-hot representation
-    y = np.array(dict[b'labels'])  # vector, contains labels, dim: # of images
-
+    X = np.array(dict[b'data'])
+    y = np.array(dict[b'labels'])
     Y = make_one_hot_encoding(len(X), y)
 
-    print(np.shape(X))
     return [np.array(X.astype(float)).transpose(), np.array(Y.astype(float)).transpose(), y.astype(float)]
 
 
@@ -130,14 +114,8 @@ def make_one_hot_encoding(batch_size, indices):
         hot = indices[i]
         Y[i][hot] = 1
 
-    print(indices)
-    print(Y)
-
     return Y
 
-
-# TODO: Check if that mean becomes approximatly zero is okay
-# Standard Score? (X-mean)/std
 def pre_process(training_data):
     [X, Y, y] = training_data
     mean_X = np.mean(X, axis=0)
@@ -171,13 +149,13 @@ def ComputeGradients(X, Y, penalty_factor, batch_size):
     input_size = np.size(X, axis=0)
     output_size = np.size(Y, axis=0)
     neural_net = NeuralNet(input_size, output_size)
+
     batch_X = np.array(X[:, 0:0 + batch_size])
     batch_Y = np.array(Y[:, 0:0 + batch_size])
     P_batch = np.array(neural_net.evaluate_classifier(batch_X))
-    #print(P_batch)
+
     grad_analytiaclly = neural_net.compute_gradients(batch_X, batch_Y, P_batch, penalty_factor, batch_size)
-    grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(),
-                                           penalty_factor, 0.000001)
+    grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(), penalty_factor, 0.000001)
     return grad_analytiaclly, grad_numerically
 
 
@@ -214,6 +192,7 @@ def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
 
     return [grad_W, grad_b]
 
+
 def gradient_difference(gradient_analytical, gradient_numeric, eps):
     numerator = np.absolute(gradient_analytical - gradient_numeric)
     denominator = np.max(np.array([eps, (np.absolute(gradient_analytical) + np.absolute(gradient_numeric))]))
@@ -221,7 +200,7 @@ def gradient_difference(gradient_analytical, gradient_numeric, eps):
     print("Denominator: ", denominator)
     print("eps: ", eps)
     print("abs: ", (np.absolute(gradient_analytical) + np.absolute(gradient_numeric)))
-    return numerator/denominator
+    return numerator / denominator
 
 
 def printOutGradients(grad_analytically, grad_numerically):
@@ -238,6 +217,7 @@ def printOutGradients(grad_analytically, grad_numerically):
     print(grad_Wn)
     print(grad_bn)
 
+
 def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     print("Gradient differences:")
     print("Weights:")
@@ -248,6 +228,7 @@ def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     print("Bias:")
     for i in range(np.size(grad_b, axis=0)):
         print(gradient_difference(grad_b[i], grad_bn[i], eps))
+
 
 def plot_loss(train_loss, val_loss):
     plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
@@ -267,6 +248,9 @@ def plot_loss(train_loss, val_loss):
     plt.legend()
     plt.show()
 
+def plot_weight_matrix(weight_matrix):
+    montage(weight_matrix)
+
 if __name__ == '__main__':
     training_data = load_batch('data_batch_1')
     validation_data = load_batch('data_batch_2')
@@ -275,8 +259,6 @@ if __name__ == '__main__':
     processed_training_data = pre_process(training_data)
     processed_validation_data = pre_process(validation_data)
     processed_test_data = pre_process(test_data)
-
-    # print(np.size(processed_training_data[0], axis=1), np.size(processed_training_data[1], axis=1))
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
@@ -288,60 +270,38 @@ if __name__ == '__main__':
     vdl = processed_validation_data[1]
 
     batch_size = 100
-    eta = 0.001
+    eta = 0.1
     n_epochs = 40
     GDparams = batch_size, eta, n_epochs
     penalty_factor = 0
 
     train_loss, validation_loss = neural_net.MiniBatchGD(tdi, tdl, vdi, vdl, penalty_factor, GDparams)
     plot_loss(train_loss, validation_loss)
+    plot_weight_matrix(neural_net.get_weights())
 
     print("-----------------------------")
-    print("Final train loss: ", neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor))
-    print("Final validation loss: ", neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1], penalty_factor))
+    print("Final train loss: ",
+          neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor))
+    print("Final validation loss: ",
+          neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1], penalty_factor))
     print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1], penalty_factor))
 
     print("------------------------------")
     print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
-    print("Final validation accuracy: ", neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
+    print("Final validation accuracy: ",
+          neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
     print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
 
-    '''
-    input_data = processed_training_data[0]
-    neural_net = NeuralNet(input_size, output_size)
-    penalty_factor = 0.1
-    batch_size = 50
+
+    '''neural_net = NeuralNet(input_size, output_size)
+    penalty_factor = 0
+    batch_size = 100
     grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1],
                                                            penalty_factor, batch_size)
     printOutGradients(grad_analytically, grad_numerically)
 
     eps = 0.001
     [grad_W, grad_b] = grad_analytically
-    [grad_Wn, grad_bn] = grad_numerically'''
+    [grad_Wn, grad_bn] = grad_numerically
 
-    #print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)
-
-    #J = neural_net.compute_cost(processed_training_data[0], processed_training_data[1], penalty_factor)
-
-    '''W = [[0, 0, 1],
-        [0, 0, 1],
-        [0, 0, 1]]
-    print(W)
-    #b = [1, 1, 1]
-    #b = np.array(b).reshape(np.size(b), 1)
-    print(np.delete(W, np.size(W, axis=1)-1, 1))
-    print(W)
-    #print(b)
-    #print(np.column_stack((W, b)))'''
-
-    '''W = np.matrix([[3, 6],
-         [3, 9]])
-    #W = np.sum(W, axis=0)
-    b = np.array([1, 3])
-    print(W/b)'''
-
-    '''weights = [[0, 0],
-               [0, 0]]
-    bias = [[1],
-            [1]]
-    print(np.column_stack((weights, bias)))'''
+    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)'''
