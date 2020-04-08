@@ -5,53 +5,79 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-class NeuralNet:
+class ANN_two_layer:
 
-    def __init__(self, input_size, output_size, weights=0, bias=0):
+    def __init__(self, input_size, hidden_size, output_size, weights_1=0, bias_1=0, weights_2=0, bias_2=0):
         mu, sigma = 0, 0.01
-        if weights is 0:
-            self.weights = np.random.normal(mu, sigma, (output_size, input_size + 1))
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.output_size = output_size
+
+        if weights_1 is 0:
+            weights_1 = np.random.normal(mu, sigma, (hidden_size, input_size))
+            weights_2 = np.random.normal(mu, sigma, (output_size, hidden_size))
+            bias_1 = np.zeros((hidden_size, 1))
+            bias_2 = np.zeros((output_size, 1))
+            self.weights_1 = np.column_stack(weights_1, bias_1)
+            self.weights_1 = np.column_stack(weights_2, bias_2)
         else:
             # print("I ran!")
-            bias = np.array(bias).reshape(np.size(bias), 1)
-            self.weights = np.column_stack((weights, bias))
+            bias_1 = np.array(bias_1).reshape(np.size(bias_1), 1)
+            self.weights_1 = np.column_stack((weights_1, bias_1))
+            bias_2 = np.array(bias_2).reshape(np.size(bias_2), 1)
+            self.weights_2 = np.column_stack((weights_2, bias_2))
+
+        self.hidden_layer_batch = np.matrix((hidden_size, 1))
 
     def evaluate_classifier(self, X):
-        return softmax(self.compute_input(X))
+        hidden_layer = max(self.compute_hidden(X), np.zeros((self.hidden_size, np.size(X, axis=1))))
+        self.hidden_layer_batch = np.column_stack((self.hidden_layer_batch, hidden_layer))
+        P = softmax(self.compute_output(hidden_layer))
+        return P
 
-    def compute_input(self, X):
-        b = np.matrix(self.get_bias()).transpose()
+    def compute_hidden(self, X):
+        b1, b2 = self.get_bias()
+        b1 = np.matrix(b1).transpose()
         sum_matrix = np.matrix(np.ones(np.size(X, axis=1)))
-        S = self.get_weights().dot(X) + b.dot(sum_matrix)
+        w1, w2 = self.get_weights()
+        S_1 = w1.dot(X) + b1.dot(sum_matrix)
+        return S_1
+
+    def compute_output(self, S_1):
+        b1, b2 = self.get_bias()
+        b1 = np.matrix(b1).transpose()
+        sum_matrix = np.matrix(np.ones(np.size(X, axis=1)))
+        w1, w2 = self.get_weights()
+        S = w1.dot(S_1) + b1.dot(sum_matrix)
         return S
 
     def compute_cost(self, X, Y, penalty_factor):
         norm_factor = 1 / np.size(X, axis=1)
-        S = self.compute_input(X)
+        P = self.evaluate_classifier(X)
         sum_entropy = 0
 
         assert np.size(Y, axis=1) == np.size(S, axis=1)
 
         for i in range(np.size(Y, axis=1)):
-            sum_entropy += self.cross_entropy(S[:, i], Y[:, i])
+            sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
 
-        penalty_term = penalty_factor * np.sum(np.square(self.get_weights()))
+        w1, w2 = self.get_weights()
+        penalty_term = penalty_factor * (np.sum(np.square(w1)) + np.sum(np.square(w2)))
         return norm_factor * sum_entropy + penalty_term
 
-    def cross_entropy(self, s, y):
-        # s: network output
+    def cross_entropy(self, p, y):
+        # s: softmax network output
         # y: expected output - one-hot encoding
-        p = np.array(softmax(s))
         return -np.log10(y.dot(p)[0])
 
     def compute_total_loss(self, X, Y):
-        S = self.compute_input(X)
+        P = self.evaluate_classifier(X)
         sum_entropy = 0
 
         assert np.size(Y, axis=1) == np.size(S, axis=1)
 
         for i in range(np.size(Y, axis=1)):
-            sum_entropy += self.cross_entropy(S[:, i], Y[:, i])
+            sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
 
         return sum_entropy
 
@@ -68,19 +94,46 @@ class NeuralNet:
         return correct_answers / np.size(P, axis=1)
 
     def compute_gradients(self, X_batch, Y_batch, P_batch, penalty_factor, batch_size):
-        G_batch = np.array(-(Y_batch - P_batch))
-        gradient_W = G_batch.dot(X_batch.transpose()) / batch_size
-        gradient_b = np.sum(G_batch, axis=1) / batch_size
-        return [gradient_W + 2 * penalty_factor * self.get_weights(),
-                gradient_b]
+        # We backprop the gradient G through the net #
+        w1, w2 = self.get_weights()
+        G_batch = self.init_G_batch(Y_batch, P_batch)
+
+        dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
+        G_batch = self.propagate_G_batch(G_batch, w1, self.hidden_layer_batch)
+        dloss_W1, dloss_b1 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
+
+        gradient_W1 = dloss_W1 + 2 * penalty_factor * w1
+        gradient_b1 = dloss_b1
+
+        gradient_W2 = dloss_W2 + 2 * penalty_factor * w2
+        gradient_b2 = dloss_b2
+
+        return [(gradient_W1, gradient_b1), (gradient_W2, gradient_b2)]
+
+    def init_G_batch(self, Y_batch, P_batch):
+        return np.array(-(Y_batch - P_batch))
+
+    def get_weight_gradient(self, layer_input_batch, G_batch, batch_size):
+        dloss_W = G_batch.dot(layer_input_batch.transpose()) / batch_size
+        dloss_b = np.sum(G_batch, axis=1) / batch_size
+        return dloss_W, dloss_b
+
+    def propagate_G_batch(self, G_batch, weight, input):
+        G_batch = weight.transpose().dot(G_batch)
+        G_batch = G_batch * np.where(input > 0, input/input, input*0)
+        return G_batch
 
     '''Remember here that the biases actually are actually the last column of the weight matrix'''
 
     def get_weights(self):
-        return np.delete(self.weights, np.size(self.weights, axis=1) - 1, 1)
+        weights_1 = np.delete(self.weights_1, np.size(self.weights_1, axis=1) - 1, 1)
+        weights_2 = np.delete(self.weights_2, np.size(self.weights_2, axis=1) - 1, 1)
+        return weights_1, weights_2
 
     def get_bias(self):
-        return np.array(self.weights[:, np.size(self.weights, axis=1) - 1])
+        bias_1 = np.array(self.weights_1[:, np.size(self.weights_1, axis=1) - 1])
+        bias_2 = np.array(self.weights_2[:, np.size(self.weights_2, axis=1) - 1])
+        return bias_1, bias_2
 
     def MiniBatchGD(self, X, Y, X_val, Y_val, penalty_factor, GDparams):
         batch_size, eta, n_epochs = GDparams
