@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/Assignment2/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assignment2/NeuralNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment2/NeuralNet.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -29,7 +29,20 @@
     <select />
   </component>
   <component name="FileEditorManager">
-    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300" />
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/Assignment2/NeuralNet.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="285">
+              <caret line="163" column="12" selection-start-line="163" selection-start-column="12" selection-end-line="163" selection-end-column="12" />
+              <folding>
+                <element signature="e#0#41#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
@@ -53,13 +66,15 @@
         <option value="$PROJECT_DIR$/Assignment1/assignment1.py" />
         <option value="$PROJECT_DIR$/Assignment1/functions.py" />
         <option value="$PROJECT_DIR$/Assignment1/NeuralNet.py" />
+        <option value="$PROJECT_DIR$/Assignment2/NeuralNet.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="953" />
-    <option name="width" value="974" />
-    <option name="height" value="1087" />
+    <option name="x" value="-8" />
+    <option name="y" value="-8" />
+    <option name="width" value="976" />
+    <option name="height" value="1096" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -105,9 +120,11 @@
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2\Datasets" />
       <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2" />
       <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment1\Images" />
     </key>
   </component>
@@ -167,17 +184,18 @@
       <workItem from="1585592609892" duration="27586000" />
       <workItem from="1585693761248" duration="32588000" />
       <workItem from="1585829466484" duration="45391000" />
-      <workItem from="1586265226006" duration="2260000" />
+      <workItem from="1586265226006" duration="25697000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="135410000" />
+    <option name="totallyTimeSpent" value="158847000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="953" y="0" width="974" height="1087" extended-state="0" />
+    <frame x="-8" y="-8" width="976" height="1096" extended-state="0" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.2297593" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19868995" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -281,6 +299,16 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Assignment1/Images/Weights0-0.001.png">
       <provider selected="true" editor-type-id="images" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment2/NeuralNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="285">
+          <caret line="163" column="12" selection-start-line="163" selection-start-column="12" selection-end-line="163" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
     </entry>
   </component>
 </project>

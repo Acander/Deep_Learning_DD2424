@@ -4,7 +4,6 @@ from Assignment1.functions import montage
 import numpy as np
 import matplotlib.pyplot as plt
 
-
 class ANN_two_layer:
 
     def __init__(self, input_size, hidden_size, output_size, weights_1=0, bias_1=0, weights_2=0, bias_2=0):
@@ -46,7 +45,7 @@ class ANN_two_layer:
     def compute_output(self, S_1):
         b1, b2 = self.get_bias()
         b1 = np.matrix(b1).transpose()
-        sum_matrix = np.matrix(np.ones(np.size(X, axis=1)))
+        sum_matrix = np.matrix(np.ones(np.size(S_1, axis=1)))
         w1, w2 = self.get_weights()
         S = w1.dot(S_1) + b1.dot(sum_matrix)
         return S
@@ -56,7 +55,7 @@ class ANN_two_layer:
         P = self.evaluate_classifier(X)
         sum_entropy = 0
 
-        assert np.size(Y, axis=1) == np.size(S, axis=1)
+        assert np.size(Y, axis=1) == np.size(P, axis=1)
 
         for i in range(np.size(Y, axis=1)):
             sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
@@ -74,7 +73,7 @@ class ANN_two_layer:
         P = self.evaluate_classifier(X)
         sum_entropy = 0
 
-        assert np.size(Y, axis=1) == np.size(S, axis=1)
+        assert np.size(Y, axis=1) == np.size(P, axis=1)
 
         for i in range(np.size(Y, axis=1)):
             sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
@@ -100,7 +99,7 @@ class ANN_two_layer:
 
         dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
         G_batch = self.propagate_G_batch(G_batch, w1, self.hidden_layer_batch)
-        dloss_W1, dloss_b1 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
+        dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
 
         gradient_W1 = dloss_W1 + 2 * penalty_factor * w1
         gradient_b1 = dloss_b1
@@ -135,28 +134,34 @@ class ANN_two_layer:
         bias_2 = np.array(self.weights_2[:, np.size(self.weights_2, axis=1) - 1])
         return bias_1, bias_2
 
-    def MiniBatchGD(self, X, Y, X_val, Y_val, penalty_factor, GDparams):
+    def MiniBatchGD(self, train_data, val_data, penalty_factor, GDparams):
         batch_size, eta, n_epochs = GDparams
-        # train_cost = np.zeros(n_epochs)
-        # validation_cost = np.zeros(n_epochs)
+
+        #init information
+        train_cost = np.zeros(n_epochs)
+        validation_cost = np.zeros(n_epochs)
         train_loss = np.zeros(n_epochs)
         validation_loss = np.zeros(n_epochs)
+
+        X, Y = train_data
+        X_val, Y_val = val_data
+
         for i in range(n_epochs):
             self.fit(X, Y, penalty_factor, eta, batch_size)
-            # ts = self.compute_cost(X, Y, penalty_factor)
-            # vl = self.compute_cost(X_val, Y_val, penalty_factor)
-            # train_cost[i] = ts
-            # validation_cost[i] = vl
+            train_cost[i] = self.compute_cost(X, Y, penalty_factor)
+            validation_cost[i] = self.compute_cost(X_val, Y_val, penalty_factor)
             train_loss[i] = self.compute_total_loss(X, Y)
             validation_loss[i] = self.compute_total_loss(X_val, Y_val)
 
-        # return train_cost, validation_cost
-        return train_loss, validation_loss
+        cost = train_cost, validation_cost
+        loss = train_loss, validation_loss
+        return cost, loss
 
     def fit(self, X, Y, penalty_factor, eta, batchSize=-1):
 
         if (batchSize == -1):
-            batchSize = X.shape[1]
+            batchSize = 1
+            
         for i in range(0, X.shape[1], batchSize):
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
@@ -196,40 +201,33 @@ def pre_process(training_data):
     return [X, Y, y]
 
 
-def getDataSize(W):
+'''def getDataSize(W):
     output_size = np.size(W, axis=0)
     input_size = np.size(W, axis=1)
     return input_size, output_size
+'''
 
-
-def ComputeCost(X, Y, W, b, penalty_factor):
-    input_size, output_size = getDataSize(W)
-    neural_net = NeuralNet(input_size, output_size, weights=W, bias=b)
+def ComputeCost(X, Y, neural_net, penalty_factor):
     return neural_net.compute_cost(X, Y, penalty_factor)
 
 
-def ComputeAccuracy(X, y, W, b):
-    input_size, output_size = getDataSize(W)
-    neural_net = NeuralNet(input_size, output_size, weights=W, bias=b)
-    return neural_net.compute_accuracy(X, y)
-
-
-def ComputeGradients(X, Y, penalty_factor, batch_size):
-    input_size = np.size(X, axis=0)
-    output_size = np.size(Y, axis=0)
-    neural_net = NeuralNet(input_size, output_size)
-
+def ComputeGradients(X, Y, neural_net, penalty_factor, batch_size):
     batch_X = np.array(X[:, 0:0 + batch_size])
     batch_Y = np.array(Y[:, 0:0 + batch_size])
     P_batch = np.array(neural_net.evaluate_classifier(batch_X))
+    batch_hidden = neural_net.hidden_layer_batch # We have evaluated the network so the values of the hidden layer should be available
+
 
     grad_analytiaclly = neural_net.compute_gradients(batch_X, batch_Y, P_batch, penalty_factor, batch_size)
-    grad_numerically = ComputeGradsNumSlow(batch_X, batch_Y, P_batch, neural_net.get_weights(), neural_net.get_bias(),
-                                           penalty_factor, 0.000001)
-    return grad_analytiaclly, grad_numerically
+    w1, w2 = neural_net.get_weights()
+    b1, b2 = neural_net.get_bias()
+    grad_numerically_1 = ComputeGradsNumSlow(batch_X, batch_hidden, w1, b1, penalty_factor, 0.00001)
+    grad_numerically_2 = ComputeGradsNumSlow(batch_hidden, batch_Y, w2, b2, penalty_factor, 0.00001)
+
+    return grad_analytiaclly, [grad_numerically_1, grad_numerically_2]
 
 
-def ComputeGradsNumSlow(X, Y, P, W, b, lamda, h):
+def ComputeGradsNumSlow(X, Y, W, b, lamda, h):
     """ Converted from matlab code """
     no = W.shape[0]
     d = X.shape[0]
@@ -353,7 +351,8 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
-    neural_net = NeuralNet(input_size, output_size)
+    hidden_size = 4000
+    neural_net = ANN_two_layer(input_size, hidden_size, output_size)
 
     tdi = processed_training_data[0]
     tdl = processed_training_data[1]
