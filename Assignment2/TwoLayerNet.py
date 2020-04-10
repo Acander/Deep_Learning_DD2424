@@ -17,6 +17,7 @@ class ANN_two_layer:
         if weights_1 is 0:
             self.w1 = np.random.normal(mu, sigma, (hidden_size, input_size))
             self.w2 = np.random.normal(mu, sigma, (output_size, hidden_size))
+            zero = np.zeros((hidden_size, 1))
             self.b1 = np.zeros((hidden_size, 1))
             self.b2 = np.zeros((output_size, 1))
 
@@ -26,8 +27,8 @@ class ANN_two_layer:
             # print("I ran!")
             self.w1 = np.matrix(weights_1)
             self.w2 = np.matrix(weights_2)
-            self.b1 = np.array(bias_1).reshape(np.size(bias_1), 1)
-            self.b2 = np.array(bias_2).reshape(np.size(bias_2), 1)
+            self.b1 = np.array(bias_1).reshape((hidden_size, 1))
+            self.b2 = np.array(bias_2).reshape((output_size, 1))
 
             '''self.weights_1 = np.column_stack((weights_1, bias_1))
             self.weights_2 = np.column_stack((weights_2, bias_2))'''
@@ -38,8 +39,8 @@ class ANN_two_layer:
         return weight_matrices, bias_arrays
 
     def evaluate_classifier(self, X):
-        hidden_layer = max(self.compute_hidden(X), np.zeros((self.hidden_size, np.size(X, axis=1))))
-        self.hidden_layer_batch = np.column_stack((self.hidden_layer_batch, hidden_layer))
+        hidden_layer = np.maximum(self.compute_hidden(X), np.zeros((self.hidden_size, np.size(X, axis=1))))
+        self.hidden_layer_batch = hidden_layer
         P = softmax(self.compute_output(hidden_layer))
         return P
 
@@ -52,9 +53,8 @@ class ANN_two_layer:
         return S_1'''
 
     def compute_hidden(self, X):
-        b1 = np.matrix(self.b1).transpose()
-        sum_matrix = np.matrix(np.ones(np.size(X, axis=1)))
-        S_1 = self.w1.dot(X) + b1.dot(sum_matrix)
+        sum_matrix = np.ones((1, np.size(X, axis=1)))
+        S_1 = self.w1.dot(X) + self.b1.dot(sum_matrix)
         return S_1
 
     '''def compute_output(self, S_1):
@@ -66,9 +66,8 @@ class ANN_two_layer:
         return S'''
 
     def compute_output(self, S_1):
-        b2 = np.matrix(self.b2).transpose()
-        sum_matrix = np.matrix(np.ones(np.size(S_1, axis=1)))
-        S = self.w2.dot(S_1) + b2.dot(sum_matrix)
+        sum_matrix = np.ones((1, np.size(S_1, axis=1)))
+        S = self.w2.dot(S_1) + self.b2.dot(sum_matrix)
         return S
 
     '''def compute_cost(self, X, Y):
