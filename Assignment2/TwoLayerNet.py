@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 class ANN_two_layer:
 
-    def __init__(self, input_size, hidden_size, output_size, lamda, weights_1=0, bias_1=0, weights_2=0, bias_2=0):
+    def __init__(self, input_size, hidden_size, output_size, lamda, eta_params, weights_1=0, bias_1=0, weights_2=0, bias_2=0):
         mu, sigma = 0, 0.01
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -21,9 +21,6 @@ class ANN_two_layer:
             self.w.append(np.random.normal(mu, sigma, (output_size, hidden_size)))
             self.b.append(np.zeros((hidden_size, 1)))
             self.b.append(np.zeros((output_size, 1)))
-
-            '''self.weights_1 = np.column_stack(self.w1, self.b1)
-            self.weights_1 = np.column_stack(self.w2, self.b2)'''
         else:
             # print("I ran!")
             self.w.append(np.matrix(weights_1))
@@ -31,8 +28,8 @@ class ANN_two_layer:
             self.b.append(np.array(bias_1).reshape((hidden_size, 1)))
             self.b.append(np.array(bias_2).reshape((output_size, 1)))
 
-            '''self.weights_1 = np.column_stack((weights_1, bias_1))
-            self.weights_2 = np.column_stack((weights_2, bias_2))'''
+        #Paramters related to cyclic learning rate:
+        self.eta_min, self.eta_max, self.step_size = eta_params
 
     '''def bunch_up_params(self):
         weight_matrices = np.array([self.w[0], self.w[1]])
@@ -196,19 +193,22 @@ class ANN_two_layer:
         return bias_1, bias_2'''
 
     def MiniBatchGD(self, train_data, val_data, GDparams):
-        batch_size, eta, n_epochs = GDparams
+        batch_size, n_cycles = GDparams
 
         #init information
-        train_cost = np.zeros(n_epochs)
-        validation_cost = np.zeros(n_epochs)
-        train_loss = np.zeros(n_epochs)
-        validation_loss = np.zeros(n_epochs)
+        train_cost = np.zeros(n_cycles)
+        validation_cost = np.zeros(n_cycles)
+        train_loss = np.zeros(n_cycles)
+        validation_loss = np.zeros(n_cycles)
 
         X, Y = train_data
         X_val, Y_val = val_data
 
-        for i in range(n_epochs):
-            self.fit(X, Y, eta, batch_size)
+        t = 0 #Time step for cyclic learning rate
+
+        for i in range(n_cycles):
+            eta_t = self.updatedLearningRate(t, n_cycles)
+            self.fit(X, Y, eta_t, batch_size)
             train_cost[i] = self.compute_cost(X, Y)
             validation_cost[i] = self.compute_cost(X_val, Y_val)
             train_loss[i] = self.compute_total_loss(X, Y)
@@ -233,9 +233,6 @@ class ANN_two_layer:
             self.update_weights(first_layer, second_layer, eta)
 
 
-    '''def construct_weight_matrix(self, weights, bias):
-        return np.column_stack((weights, bias))'''
-
     def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
         gradient_W1, gradient_b1 = first_layer_gradient
         gradient_W2, gradient_b2 = second_layer_gradient
@@ -247,6 +244,22 @@ class ANN_two_layer:
 
         #self.construct_weight_matrix(w1, b1)
         #self.construct_weight_matrix(w2, b2)
+
+    def updatedLearningRate(self, t, n_cycles):
+        steps = np.arange(n_cycles*2)
+        intervals = steps*self.step_size
+        for i in range(intervals):
+            if (intervals[i] <= t < intervals):
+                if i % 2 > 0:
+                    return self.unevenIterationFunc(i, t)
+                else:
+                    return self.evenIterationFunc(i, t)
+
+    def evenIterationFunc(self, l, t):
+        return self.eta_min + (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
+
+    def unevenIterationFunc(self, l, t):
+        return self.eta_max - (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
 
 def load_batch(filename):
     dict = LoadBatch(filename)
@@ -460,12 +473,15 @@ if __name__ == '__main__':
     input_size = np.size(processed_training_data[0], axis=0)
     hidden_size = 2
     lamda = 0
-    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda)
+    eta_min = 0.00005
+    eta_max = 0.1
+    step_size = 500
+    eta_params = eta_min, eta_max, step_size
+    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
 
     '''batch_size = 100
-    eta = 0.1
-    n_epochs = 40
-    GDparams = batch_size, eta, n_epochs
+    n_cycles = 40
+    GDparams = batch_size, n_cycles
 
     tdi = processed_training_data[0]
     tdl = processed_training_data[1]
