@@ -13,30 +13,31 @@ class ANN_two_layer:
         self.output_size = output_size
         self.lamda = lamda
         self.hidden_layer_batch = np.matrix((hidden_size, 1))
+        self.w = []
+        self.b = []
 
         if weights_1 is 0:
-            self.w1 = np.random.normal(mu, sigma, (hidden_size, input_size))
-            self.w2 = np.random.normal(mu, sigma, (output_size, hidden_size))
-            zero = np.zeros((hidden_size, 1))
-            self.b1 = np.zeros((hidden_size, 1))
-            self.b2 = np.zeros((output_size, 1))
+            self.w.append(np.random.normal(mu, sigma, (hidden_size, input_size)))
+            self.w.append(np.random.normal(mu, sigma, (output_size, hidden_size)))
+            self.b.append(np.zeros((hidden_size, 1)))
+            self.b.append(np.zeros((output_size, 1)))
 
             '''self.weights_1 = np.column_stack(self.w1, self.b1)
             self.weights_1 = np.column_stack(self.w2, self.b2)'''
         else:
             # print("I ran!")
-            self.w1 = np.matrix(weights_1)
-            self.w2 = np.matrix(weights_2)
-            self.b1 = np.array(bias_1).reshape((hidden_size, 1))
-            self.b2 = np.array(bias_2).reshape((output_size, 1))
+            self.w.append(np.matrix(weights_1))
+            self.w.append(np.matrix(weights_2))
+            self.b.append(np.array(bias_1).reshape((hidden_size, 1)))
+            self.b.append(np.array(bias_2).reshape((output_size, 1)))
 
             '''self.weights_1 = np.column_stack((weights_1, bias_1))
             self.weights_2 = np.column_stack((weights_2, bias_2))'''
 
-    def bunch_up_params(self):
-        weight_matrices = np.array([self.w1, self.w2])
-        bias_arrays = np.array([self.b1, self.b2])
-        return weight_matrices, bias_arrays
+    '''def bunch_up_params(self):
+        weight_matrices = np.array([self.w[0], self.w[1]])
+        bias_arrays = np.array([self.b[0], self.b[1]])
+        return weight_matrices, bias_arrays'''
 
     def evaluate_classifier(self, X):
         hidden_layer = np.maximum(self.compute_hidden(X), np.zeros((self.hidden_size, np.size(X, axis=1))))
@@ -54,7 +55,7 @@ class ANN_two_layer:
 
     def compute_hidden(self, X):
         sum_matrix = np.ones((1, np.size(X, axis=1)))
-        S_1 = self.w1.dot(X) + self.b1.dot(sum_matrix)
+        S_1 = self.w[0].dot(X) + self.b[0].dot(sum_matrix)
         return S_1
 
     '''def compute_output(self, S_1):
@@ -67,7 +68,7 @@ class ANN_two_layer:
 
     def compute_output(self, S_1):
         sum_matrix = np.ones((1, np.size(S_1, axis=1)))
-        S = self.w2.dot(S_1) + self.b2.dot(sum_matrix)
+        S = self.w[1].dot(S_1) + self.b[1].dot(sum_matrix)
         return S
 
     '''def compute_cost(self, X, Y):
@@ -94,13 +95,15 @@ class ANN_two_layer:
         for i in range(np.size(Y, axis=1)):
             sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
 
-        penalty_term = self.lamda * (np.sum(np.square(self.w1)) + np.sum(np.square(self.w2)))
+        penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
         return norm_factor * sum_entropy + penalty_term
 
     def cross_entropy(self, p, y):
         # s: softmax network output
         # y: expected output - one-hot encoding
-        return -np.log10(y.dot(p)[0])
+        p = np.array(p).reshape((np.size(p), 1))
+        y = np.array(y).reshape((1, np.size(y)))
+        return -np.log10(y.dot(p)[0][0])
 
     def compute_total_loss(self, X, Y):
         P = self.evaluate_classifier(X)
@@ -149,13 +152,13 @@ class ANN_two_layer:
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
-        G_batch = self.propagate_G_batch(G_batch, self.w1, self.hidden_layer_batch)
+        G_batch = self.propagate_G_batch(G_batch, self.w[1], self.hidden_layer_batch)
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
 
-        gradient_W1 = dloss_W1 + 2 * self.lamda * self.w1
+        gradient_W1 = dloss_W1 + 2 * self.lamda * self.w[0]
         gradient_b1 = dloss_b1
 
-        gradient_W2 = dloss_W2 + 2 * self.lamda * self.w2
+        gradient_W2 = dloss_W2 + 2 * self.lamda * self.w[1]
         gradient_b2 = dloss_b2
 
         first_layer = gradient_W1, gradient_b1
@@ -173,6 +176,9 @@ class ANN_two_layer:
         return dloss_W, dloss_b
 
     def propagate_G_batch(self, G_batch, weight, input):
+        '''print(G_batch)
+        print(weight)
+        print(input)'''
         G_batch = weight.transpose().dot(G_batch)
         G_batch = G_batch * np.where(input > 0, input/input, input*0)
         return G_batch
@@ -234,10 +240,10 @@ class ANN_two_layer:
         gradient_W1, gradient_b1 = first_layer_gradient
         gradient_W2, gradient_b2 = second_layer_gradient
 
-        self.w1 = self.w1 - eta * gradient_W1
-        self.w2 = self.w2 - eta * gradient_W2
-        self.b1 = self.b1 - eta * gradient_b1
-        self.b2 = self.b2 - eta * gradient_b2
+        self.w[0] = self.w[0] - eta * gradient_W1
+        self.w[1] = self.w[1] - eta * gradient_W2
+        self.b[0] = self.b[0] - eta * gradient_b1
+        self.b[1] = self.b[1] - eta * gradient_b2
 
         #self.construct_weight_matrix(w1, b1)
         #self.construct_weight_matrix(w2, b2)
@@ -294,47 +300,64 @@ def ComputeGradients(X, Y, neural_net, batch_size):
 
 def ComputeGradsNumSlow(X, Y, neuarl_net, h):
     """ Converted from matlab code """
-    W, B = neural_net.bunch_up_params()
-    W_shape = np.shape(W)
-    B_shape = np.shape(B)
+    #Note that W and B are arrays with the weights and biases for each layer kept seperatly
+    W = neural_net.w
+    B = neural_net.b
+    W_size = np.size(W)
+    B_size = np.size(B)
 
-    print("W_shape: ", W_shape)
-    print("B_shape: ", B_shape)
+    '''#print(grad_W)
+    #print(grad_b)
 
-    grad_W = np.zeros(W_shape)
-    grad_b = np.zeros(B_shape)
+    #Init grad vectors for bias and weights
+    for i in range(W_size):
+        grad_W.append(np.zeros(np.size(W[i])))
+
+    for i in range(B_size):
+        grad_b.append(np.zeros(np.size(B[i])))
+    '''
+
+    grad_W = []
+    grad_b = []
 
     neural_net_try = neural_net
 
-    for j in range(B_shape[0]):
-        for i in range(B_shape[j]):
+    for j in range(B_size):
+        grad_b.append(np.zeros(np.size(B[j])))
+        for i in range(np.size(B[j])):
             b_try = B
             b_try[j][i] = b_try[j][i] - h
-            neural_net_try.bias_arrays = b_try
+            neural_net_try.b = b_try
             c1 = neural_net_try.compute_cost(X, Y)
 
             b_try = B
             b_try[j][i] = b_try[j][i] + h
-            neural_net_try.bias_arrays = b_try
+            neural_net_try.b = b_try
             c2 = neural_net_try.compute_cost(X, Y)
 
+            #print(c2)
+            #print(c1)
             grad_b[j][i] = (c2 - c1) / (2 * h)
 
     neural_net_try = neural_net
 
-    for i in range(W_shape[0]):
-        for j in range(W_shape[1]):
-            W_try = W
-            W_try[j][i] = W_try[j][i] - h
-            neural_net_try.weight_matrices = W_try
-            c1 = neural_net_try.compute_cost(X, Y)
+    for j in range(W_size):
+        grad_W.append(np.zeros(np.shape(W[j])))
+        print(np.size(W[j], axis=0))
+        for i in range(np.size(W[j], axis=0)):
+            print(np.size(W[j], axis=1))
+            for k in range(np.size(W[j], axis=1)):
+                W_try = W
+                W_try[j][i][k] = W_try[j][i][k] - h
+                neural_net_try.w = W_try
+                c1 = neural_net_try.compute_cost(X, Y)
 
-            W_try = W
-            W_try[j][i] = W_try[j][i] + h
-            neural_net_try.weight_matrices = W_try
-            c2 = neural_net_try.compute_cost(X, Y)
+                W_try = W
+                W_try[j][i][k] = W_try[j][i][k] + h
+                neural_net_try.w = W_try
+                c2 = neural_net_try.compute_cost(X, Y)
 
-            grad_W[j][i] = (c2 - c1) / (2 * h)
+                grad_W[j][i][k] = (c2 - c1) / (2 * h)
 
     return [grad_W, grad_b]
 
@@ -353,15 +376,15 @@ def printOutGradients(grad_analytically, grad_numerically):
     [grad_W, grad_b] = grad_analytically
     [grad_Wn, grad_bn] = grad_numerically
 
-    for i in range(grad_W):
+    for i in range(np.size(grad_W)):
         print("Analytical (my own):.............", i)
         print(np.size(grad_W[i], axis=1))
         print(np.size(grad_b[i]))
         print(grad_W[i])
         print(grad_b[i])
 
-    for i in range(grad_W):
-        print("Numerical (approximate):................")
+    for i in range(np.size(grad_W)):
+        print("Numerical (approximate):................", i)
         print(np.size(grad_Wn[i], axis=1))
         print(np.size(grad_bn[i]))
         print(grad_Wn[i])
@@ -371,13 +394,15 @@ def printOutGradients(grad_analytically, grad_numerically):
 def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     print("Gradient differences:")
     print("Weights:")
-    for i in range(np.size(grad_W, axis=0)):
-        for j in range(np.size(grad_W, axis=1)):
-            print(gradient_difference(grad_W[i][j], grad_Wn[i][j], eps))
+    for k in range(np.size(grad_W)):
+        for i in range(np.size(grad_W[k], axis=0)):
+            for j in range(np.size(grad_W[k], axis=1)):
+                print(gradient_difference(grad_W[k][i][j], grad_Wn[k][i][j], eps))
 
     print("Bias:")
-    for i in range(np.size(grad_b, axis=0)):
-        print(gradient_difference(grad_b[i], grad_bn[i], eps))
+    for k in range(np.size(grad_W)):
+        for i in range(np.size(grad_b[k], axis=0)):
+            print(gradient_difference(grad_b[k][i], grad_bn[k][i], eps))
 
 
 def plot_cost(train_loss, val_loss):
@@ -433,7 +458,7 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
-    hidden_size = 4000
+    hidden_size = 2
     lamda = 0
     neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda)
 
