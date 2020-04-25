@@ -29,12 +29,9 @@ class ANN_two_layer:
             self.b.append(np.array(bias_2).reshape((output_size, 1)))
 
         #Paramters related to cyclic learning rate:
-        self.eta_min, self.eta_max, self.step_size = eta_params
+        self.eta_min, self.eta_max, self.step_size, self.n_cycles = eta_params
+        self.t = 1
 
-    '''def bunch_up_params(self):
-        weight_matrices = np.array([self.w[0], self.w[1]])
-        bias_arrays = np.array([self.b[0], self.b[1]])
-        return weight_matrices, bias_arrays'''
 
     def evaluate_classifier(self, X):
         hidden_layer = np.maximum(self.compute_hidden(X), np.zeros((self.hidden_size, np.size(X, axis=1))))
@@ -42,45 +39,17 @@ class ANN_two_layer:
         P = softmax(self.compute_output(hidden_layer))
         return P
 
-    '''def compute_hidden(self, X):
-        b1, b2 = self.get_bias()
-        b1 = np.matrix(b1).transpose()
-        sum_matrix = np.matrix(np.ones(np.size(X, axis=1)))
-        w1, w2 = self.get_weights()
-        S_1 = w1.dot(X) + b1.dot(sum_matrix)
-        return S_1'''
 
     def compute_hidden(self, X):
         sum_matrix = np.ones((1, np.size(X, axis=1)))
         S_1 = self.w[0].dot(X) + self.b[0].dot(sum_matrix)
         return S_1
 
-    '''def compute_output(self, S_1):
-        b1, b2 = self.get_bias()
-        b1 = np.matrix(b1).transpose()
-        sum_matrix = np.matrix(np.ones(np.size(S_1, axis=1)))
-        w1, w2 = self.get_weights()
-        S = w1.dot(S_1) + b1.dot(sum_matrix)
-        return S'''
 
     def compute_output(self, S_1):
         sum_matrix = np.ones((1, np.size(S_1, axis=1)))
         S = self.w[1].dot(S_1) + self.b[1].dot(sum_matrix)
         return S
-
-    '''def compute_cost(self, X, Y):
-        norm_factor = 1 / np.size(X, axis=1)
-        P = self.evaluate_classifier(X)
-        sum_entropy = 0
-
-        assert np.size(Y, axis=1) == np.size(P, axis=1)
-
-        for i in range(np.size(Y, axis=1)):
-            sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
-
-        w1, w2 = self.get_weights()
-        penalty_term = self.lamda * (np.sum(np.square(w1)) + np.sum(np.square(w2)))
-        return norm_factor * sum_entropy + penalty_term'''
 
     def compute_cost(self, X, Y):
         norm_factor = 1 / np.size(X, axis=1)
@@ -125,32 +94,18 @@ class ANN_two_layer:
 
         return correct_answers / np.size(P, axis=1)
 
-    '''def compute_gradients(self, X_batch, Y_batch, P_batch, penalty_factor, batch_size):
-        # We backprop the gradient G through the net #
-        w1, w2 = self.get_weights()
-        G_batch = self.init_G_batch(Y_batch, P_batch)
-
-        dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
-        G_batch = self.propagate_G_batch(G_batch, w1, self.hidden_layer_batch)
-        dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
-
-        gradient_W1 = dloss_W1 + 2 * penalty_factor * w1
-        gradient_b1 = dloss_b1
-
-        gradient_W2 = dloss_W2 + 2 * penalty_factor * w2
-        gradient_b2 = dloss_b2
-
-        first_layer = gradient_W1, gradient_b1
-        second_layer = gradient_W2, gradient_b2
-        return first_layer, second_layer'''
-
     def compute_gradients(self, X_batch, Y_batch, P_batch, batch_size):
         # We backprop the gradient G through the net #
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
+        #print(np.shape(dloss_W2))
+        #print(np.shape(dloss_b2))
+        #print(np.shape(G_batch))
         G_batch = self.propagate_G_batch(G_batch, self.w[1], self.hidden_layer_batch)
+        #print(np.shape(G_batch))
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
+
 
         gradient_W1 = dloss_W1 + 2 * self.lamda * self.w[0]
         gradient_b1 = dloss_b1
@@ -160,9 +115,9 @@ class ANN_two_layer:
 
         first_layer = gradient_W1, gradient_b1
         second_layer = gradient_W2, gradient_b2
-        grad_W = np.array([gradient_W1, gradient_W2])
-        grad_b = np.array([gradient_b1, gradient_b2])
-        return [grad_W, grad_b]
+        #grad_W = np.array([gradient_W1, gradient_W2])
+        #grad_b = np.array([gradient_b1, gradient_b2])
+        return [first_layer, second_layer]
 
     def init_G_batch(self, Y_batch, P_batch):
         return np.array(-(Y_batch - P_batch))
@@ -173,93 +128,85 @@ class ANN_two_layer:
         return dloss_W, dloss_b
 
     def propagate_G_batch(self, G_batch, weight, input):
-        '''print(G_batch)
-        print(weight)
-        print(input)'''
         G_batch = weight.transpose().dot(G_batch)
         G_batch = G_batch * np.where(input > 0, input/input, input*0)
         return G_batch
 
-    '''Remember here that the biases actually are actually the last column of the weight matrix'''
-
-    '''def get_weights(self):
-        weights_1 = np.delete(self.weights_1, np.size(self.weights_1, axis=1) - 1, 1)
-        weights_2 = np.delete(self.weights_2, np.size(self.weights_2, axis=1) - 1, 1)
-        return weights_1, weights_2
-
-    def get_bias(self):
-        bias_1 = np.array(self.weights_1[:, np.size(self.weights_1, axis=1) - 1])
-        bias_2 = np.array(self.weights_2[:, np.size(self.weights_2, axis=1) - 1])
-        return bias_1, bias_2'''
-
     def MiniBatchGD(self, train_data, val_data, GDparams):
-        batch_size, n_cycles = GDparams
+        batch_size, epochs = GDparams
 
         #init information
-        train_cost = np.zeros(n_cycles)
-        validation_cost = np.zeros(n_cycles)
-        train_loss = np.zeros(n_cycles)
-        validation_loss = np.zeros(n_cycles)
+        train_cost = []
+        validation_cost = []
+        train_loss = []
+        validation_loss = []
 
         X, Y = train_data
         X_val, Y_val = val_data
 
-        t = 0 #Time step for cyclic learning rate
-
-        for i in range(n_cycles):
-            eta_t = self.updatedLearningRate(t, n_cycles)
-            self.fit(X, Y, eta_t, batch_size)
-            train_cost[i] = self.compute_cost(X, Y)
-            validation_cost[i] = self.compute_cost(X_val, Y_val)
-            train_loss[i] = self.compute_total_loss(X, Y)
-            validation_loss[i] = self.compute_total_loss(X_val, Y_val)
+        for i in range(epochs):
+            self.fit(X, Y, batch_size)
+            if self.checkIfTrainingShouldStop():
+                print("Should stop")
+                break
+            train_cost.append(self.compute_cost(X, Y))
+            validation_cost.append(self.compute_cost(X_val, Y_val))
+            train_loss.append(self.compute_total_loss(X, Y))
+            validation_loss.append(self.compute_total_loss(X_val, Y_val))
 
         cost = train_cost, validation_cost
         loss = train_loss, validation_loss
         return cost, loss
 
-    def fit(self, X, Y, eta, batchSize=-1):
+    def fit(self, X, Y, batchSize=-1):
 
         if (batchSize == -1):
             batchSize = 1
 
         for i in range(0, X.shape[1], batchSize):
+            if self.checkIfTrainingShouldStop():
+                print("Should stop")
+                print(self.t)
+                break
+            #eta_t = 0.001
+            eta_t = self.updatedLearningRate()
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX)
 
             first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
 
-            self.update_weights(first_layer, second_layer, eta)
+            self.update_weights(first_layer, second_layer, eta_t)
 
 
     def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
         gradient_W1, gradient_b1 = first_layer_gradient
         gradient_W2, gradient_b2 = second_layer_gradient
 
+        gradient_b1 = np.reshape(gradient_b1, (np.size(gradient_b1), 1))
+        gradient_b2 = np.reshape(gradient_b2, (np.size(gradient_b2), 1))
+
         self.w[0] = self.w[0] - eta * gradient_W1
         self.w[1] = self.w[1] - eta * gradient_W2
         self.b[0] = self.b[0] - eta * gradient_b1
         self.b[1] = self.b[1] - eta * gradient_b2
 
-        #self.construct_weight_matrix(w1, b1)
-        #self.construct_weight_matrix(w2, b2)
-
-    def updatedLearningRate(self, t, n_cycles):
-        steps = np.arange(n_cycles*2)
-        intervals = steps*self.step_size
-        for i in range(intervals):
-            if (intervals[i] <= t < intervals):
-                if i % 2 > 0:
-                    return self.unevenIterationFunc(i, t)
-                else:
-                    return self.evenIterationFunc(i, t)
+    def updatedLearningRate(self):
+        self.t += 1
+        for l in range(self.n_cycles*2):
+            if 2*l*self.step_size <= self.t < (2*l+1)*self.step_size:
+                return self.unevenIterationFunc(l, self.t)
+            else:
+                return self.evenIterationFunc(l, self.t)
 
     def evenIterationFunc(self, l, t):
         return self.eta_min + (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
 
     def unevenIterationFunc(self, l, t):
-        return self.eta_max - (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
+        return self.eta_max - (t - (2*l+1)*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
+
+    def checkIfTrainingShouldStop(self):
+        return self.n_cycles*2 == self.t/self.step_size
 
 def load_batch(filename):
     dict = LoadBatch(filename)
@@ -418,15 +365,15 @@ def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
             print(gradient_difference(grad_b[k][i], grad_bn[k][i], eps))
 
 
-def plot_cost(train_loss, val_loss):
-    plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
-    plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation Loss')
+def plot_cost(train_cost, val_cost):
+    plt.plot(np.arange(np.size(train_cost)), train_cost, color='blue', label='Training Loss')
+    plt.plot(np.arange(np.size(val_cost)), val_cost, color='red', label='Validation Loss')
 
     xMin = 0
-    xMax = train_loss.size
+    xMax = train_cost.size
 
-    yMin = np.min(np.concatenate((train_loss, val_loss)))
-    yMax = np.max(np.concatenate((train_loss, val_loss)))
+    yMin = np.min(np.concatenate((train_cost, val_cost)))
+    yMax = np.max(np.concatenate((train_cost, val_cost)))
 
     plt.xlim(xMin, xMax)
     plt.ylim(yMin, yMax)
@@ -471,17 +418,18 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
-    hidden_size = 2
-    lamda = 0
-    eta_min = 0.00005
+    hidden_size = 50
+    lamda = 0.01
+    eta_min = 0.00001
     eta_max = 0.1
     step_size = 500
-    eta_params = eta_min, eta_max, step_size
+    n_cycles = 1
+    eta_params = eta_min, eta_max, step_size, n_cycles
     neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
 
-    '''batch_size = 100
-    n_cycles = 40
-    GDparams = batch_size, n_cycles
+    batch_size = 100
+    epochs = 40
+    GDparams = batch_size, epochs
 
     tdi = processed_training_data[0]
     tdl = processed_training_data[1]
@@ -494,8 +442,8 @@ if __name__ == '__main__':
     cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
     train_cost, validation_cost = cost
     train_loss, validation_loss = loss
-    plot_cost(train_loss, validation_loss)
-    plot_total_loss(train_loss, validation_loss)
+    plot_cost(np.array(train_cost), validation_cost)
+    plot_total_loss(np.array(train_loss), validation_loss)
     
     #plot_weight_matrix(neural_net.get_weights())
 
@@ -510,9 +458,9 @@ if __name__ == '__main__':
     print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
     print("Final validation accuracy: ",
           neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
-    print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))'''
+    print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
 
-    penalty_factor = 0
+    '''penalty_factor = 0
     batch_size = 100
     grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1], neural_net,
                                                            batch_size)
@@ -522,4 +470,4 @@ if __name__ == '__main__':
     [grad_W, grad_b] = grad_analytically
     [grad_Wn, grad_bn] = grad_numerically
 
-    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)
+    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)'''
