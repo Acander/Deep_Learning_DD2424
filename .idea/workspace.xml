@@ -2,9 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/TestTensorFlow/Main.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/TestTensorFlow/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/TestTensorFlow/Main.py" beforeDir="false" afterPath="$PROJECT_DIR$/TestTensorFlow/Main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -14,9 +14,9 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Assignment1.coverage" NAME="Assignment1 Coverage Results" MODIFIED="1586516013808" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment1" />
-    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$TwoLayerNet.coverage" NAME="TwoLayerNet Coverage Results" MODIFIED="1587814937772" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment2" />
+    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$TwoLayerNet.coverage" NAME="TwoLayerNet Coverage Results" MODIFIED="1588007715582" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment2" />
     <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$NeuralNet.coverage" NAME="NeuralNet Coverage Results" MODIFIED="1586517633706" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment2" />
-    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Main.coverage" NAME="Main Coverage Results" MODIFIED="1587816907352" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/TestTensorFlow" />
+    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Main.coverage" NAME="Main Coverage Results" MODIFIED="1587827752827" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/TestTensorFlow" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -34,25 +34,13 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Assignment2/TwoLayerNet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="933">
-              <caret line="171" column="12" selection-start-line="171" selection-start-column="12" selection-end-line="171" selection-end-column="12" />
+            <state relative-caret-position="1735">
+              <caret line="208" column="40" lean-forward="true" selection-start-line="208" selection-start-column="40" selection-end-line="208" selection-end-column="40" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/TestTensorFlow/Main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="357">
-              <caret line="21" column="35" lean-forward="true" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
-              <folding>
-                <element signature="e#26#49#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -69,8 +57,8 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>print</find>
       <find>con</find>
+      <find>print</find>
     </findStrings>
   </component>
   <component name="Git.Settings">
@@ -84,23 +72,24 @@
         <option value="$PROJECT_DIR$/Assignment1/functions.py" />
         <option value="$PROJECT_DIR$/Assignment1/NeuralNet.py" />
         <option value="$PROJECT_DIR$/Assignment2/NeuralNet.py" />
-        <option value="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" />
         <option value="$PROJECT_DIR$/TestTensorFlow/main.py" />
         <option value="$PROJECT_DIR$/TestTensorFlow/Main.py" />
+        <option value="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="952" />
+    <option name="x" value="1912" />
     <option name="y" value="-8" />
-    <option name="width" value="976" />
-    <option name="height" value="1096" />
+    <option name="width" value="1936" />
+    <option name="height" value="1216" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -112,12 +101,11 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/Assignment1/Images" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
@@ -144,7 +132,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Python.Main">
+  <component name="RunManager" selected="Python.TwoLayerNet">
     <configuration name="Assignment1" type="PythonConfigurationType" factoryName="Python" temporary="true">
       <module name="Deep_Learning_DD2424" />
       <option name="INTERPRETER_OPTIONS" value="" />
@@ -235,8 +223,8 @@
     </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.Main" />
         <item itemvalue="Python.TwoLayerNet" />
+        <item itemvalue="Python.Main" />
         <item itemvalue="Python.NeuralNet" />
         <item itemvalue="Python.Assignment1" />
       </list>
@@ -260,22 +248,24 @@
       <workItem from="1586265226006" duration="39793000" />
       <workItem from="1586515718259" duration="35359000" />
       <workItem from="1587653167293" duration="18301000" />
-      <workItem from="1587751162009" duration="20340000" />
+      <workItem from="1587751162009" duration="24720000" />
+      <workItem from="1587981903159" duration="12762000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="246943000" />
+    <option name="totallyTimeSpent" value="264085000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="1936" height="1096" extended-state="6" />
+    <frame x="1912" y="-8" width="1936" height="1216" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.08635394" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.03411514" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.33021808" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.3102493" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -289,7 +279,7 @@
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info anchor="right" id="SciView" order="3" weight="0.8976546" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.8033049" />
       <window_info anchor="right" id="Database" order="4" weight="0.32995737" />
     </layout>
   </component>
@@ -354,13 +344,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/../untitled1/venv/Lib/site-packages/numpy/core/numeric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="233">
-          <caret line="537" selection-start-line="537" selection-end-line="537" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../untitled1/venv/Lib/site-packages/matplotlib/axes/_base.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="199">
@@ -372,23 +355,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="206">
           <caret line="1478" selection-start-line="1478" selection-end-line="1478" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../untitled1/venv/Lib/site-packages/numpy/core/fromnumeric.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="85" selection-start-line="85" selection-end-line="85" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Assignment2/TwoLayerNet.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="933">
-          <caret line="171" column="12" selection-start-line="171" selection-start-column="12" selection-end-line="171" selection-end-column="12" />
-          <folding>
-            <element signature="e#0#41#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -422,10 +388,34 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/TestTensorFlow/Main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="357">
-          <caret line="21" column="35" lean-forward="true" selection-start-line="21" selection-start-column="35" selection-end-line="21" selection-end-column="35" />
+        <state relative-caret-position="221">
+          <caret line="13" column="19" lean-forward="true" selection-start-line="13" selection-start-column="19" selection-end-line="13" selection-end-column="19" />
           <folding>
             <element signature="e#26#49#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../untitled1/venv/Lib/site-packages/numpy/core/numeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="240">
+          <caret line="222" selection-start-line="222" selection-end-line="222" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../untitled1/venv/Lib/site-packages/numpy/core/fromnumeric.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="233">
+          <caret line="2927" selection-start-line="2927" selection-end-line="2927" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment2/TwoLayerNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1735">
+          <caret line="208" column="40" lean-forward="true" selection-start-line="208" selection-start-column="40" selection-end-line="208" selection-end-column="40" />
+          <folding>
+            <element signature="e#0#41#0" expanded="true" />
           </folding>
         </state>
       </provider>

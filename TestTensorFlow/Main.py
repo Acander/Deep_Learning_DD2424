@@ -50,25 +50,25 @@ if __name__ == '__main__':
     (train_images, train_labels), (test_images, test_labels) = fashion_mnist.load_data()
 
     #Explore the model
-    print(train_images.shape)
+    '''print(train_images.shape)
     print(len(train_labels))
     print(train_labels)
     print(test_images.shape)
-    print(len(test_labels))
+    print(len(test_labels))'''
 
     #Shot example data sample
-    plt.figure()
+    '''plt.figure()
     plt.imshow(train_images[0])
     plt.colorbar()
     plt.grid(False)
-    plt.show()
+    plt.show()'''
 
     #Preprocess the data
     train_images = train_images/255.0
     test_images = test_images/255
 
     #Verify data correctness
-    plt.figure(figsize=(10, 10))
+    '''plt.figure(figsize=(10, 10))
     for i in range(25):
         plt.subplot(5, 5, i + 1)
         plt.xticks([])
@@ -76,12 +76,31 @@ if __name__ == '__main__':
         plt.grid(False)
         plt.imshow(train_images[i], cmap=plt.cm.binary)
         plt.xlabel(class_names[train_labels[i]])
-    plt.show()
+    plt.show()'''
 
     #Build network
-    model = keras.Sequential([
+    '''model = keras.Sequential([
         keras.layers.Flatten(input_shape=(28, 28)),
+        keras.layers.Dense(512, activation='relu'),
+        keras.layers.Dense(256, activation='relu'),
         keras.layers.Dense(128, activation='relu'),
+        keras.layers.Dense(10)
+    ])'''
+
+    train_images = np.expand_dims(train_images, axis=3)
+    test_images = np.expand_dims(test_images, axis=3)
+
+    model = keras.Sequential([
+        keras.layers.Conv2D(32, (3, 3), activation='relu', input_shape=(28, 28, 1)),
+        keras.layers.Conv2D(32, (3, 3), activation='relu'),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        keras.layers.Conv2D(64, (3, 3), activation='relu'),
+        keras.layers.Conv2D(64, (3, 3), activation='relu'),
+        keras.layers.MaxPooling2D(pool_size=(2, 2)),
+
+        keras.layers.Flatten(),
+        keras.layers.Dense(256, activation='relu'),
         keras.layers.Dense(10)
     ])
 
@@ -96,10 +115,10 @@ if __name__ == '__main__':
     test_loss, test_acc = model.evaluate(test_images, test_labels, verbose=2)
     print('\nTest accuracy:', test_acc)
 
-    predictions = model.predict(test_images)
+    '''predictions = model.predict(test_images)
     print(class_names[np.argmax(predictions[0])])
 
-    '''i = 0
+    i = 0
     plt.figure(figsize=(6, 3))
     plt.subplot(1, 2, 1)
     plot_image(i, predictions[i], test_labels, test_images)
@@ -113,7 +132,7 @@ if __name__ == '__main__':
     plot_image(i, predictions[i], test_labels, test_images)
     plt.subplot(1, 2, 2)
     plot_value_array(i, predictions[i], test_labels)
-    plt.show()'''
+    plt.show()
 
     num_rows = 5
     num_cols = 3
@@ -125,4 +144,4 @@ if __name__ == '__main__':
         plt.subplot(num_rows, 2 * num_cols, 2 * i + 2)
         plot_value_array(i, predictions[i], test_labels)
     plt.tight_layout()
-    plt.show()
+    plt.show()'''

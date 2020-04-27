@@ -99,11 +99,7 @@ class ANN_two_layer:
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
-        #print(np.shape(dloss_W2))
-        #print(np.shape(dloss_b2))
-        #print(np.shape(G_batch))
         G_batch = self.propagate_G_batch(G_batch, self.w[1], self.hidden_layer_batch)
-        #print(np.shape(G_batch))
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
 
 
@@ -115,8 +111,6 @@ class ANN_two_layer:
 
         first_layer = gradient_W1, gradient_b1
         second_layer = gradient_W2, gradient_b2
-        #grad_W = np.array([gradient_W1, gradient_W2])
-        #grad_b = np.array([gradient_b1, gradient_b2])
         return [first_layer, second_layer]
 
     def init_G_batch(self, Y_batch, P_batch):
@@ -124,7 +118,7 @@ class ANN_two_layer:
 
     def get_weight_gradient(self, layer_input_batch, G_batch, batch_size):
         dloss_W = G_batch.dot(layer_input_batch.transpose()) / batch_size
-        dloss_b = np.sum(G_batch, axis=1) / batch_size
+        dloss_b = G_batch.dot(np.ones((batch_size, 1))) / batch_size
         return dloss_W, dloss_b
 
     def propagate_G_batch(self, G_batch, weight, input):
@@ -163,13 +157,13 @@ class ANN_two_layer:
         if (batchSize == -1):
             batchSize = 1
 
+        eta_t = self.eta_min
+
         for i in range(0, X.shape[1], batchSize):
             if self.checkIfTrainingShouldStop():
                 print("Should stop")
                 print(self.t)
                 break
-            #eta_t = 0.001
-            eta_t = self.updatedLearningRate()
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX)
@@ -177,7 +171,7 @@ class ANN_two_layer:
             first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
 
             self.update_weights(first_layer, second_layer, eta_t)
-
+            eta_t = self.updatedLearningRate()
 
     def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
         gradient_W1, gradient_b1 = first_layer_gradient
@@ -193,11 +187,11 @@ class ANN_two_layer:
 
     def updatedLearningRate(self):
         self.t += 1
-        for l in range(self.n_cycles*2):
-            if 2*l*self.step_size <= self.t < (2*l+1)*self.step_size:
-                return self.unevenIterationFunc(l, self.t)
-            else:
-                return self.evenIterationFunc(l, self.t)
+        l = np.floor(self.t / (2 * self.step_size))
+        if 2*l*self.step_size <= self.t < (2 * l + 1)*self.step_size:
+            return self.evenIterationFunc(l, self.t)
+        else:
+            return self.unevenIterationFunc(l, self.t)
 
     def evenIterationFunc(self, l, t):
         return self.eta_min + (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
@@ -237,16 +231,6 @@ def pre_process(training_data):
     return [X, Y, y]
 
 
-'''def getDataSize(W):
-    output_size = np.size(W, axis=0)
-    input_size = np.size(W, axis=1)
-    return input_size, output_size
-'''
-
-'''def ComputeCost(X, Y, neural_net, penalty_factor):
-    return neural_net.compute_cost(X, Y, penalty_factor)
-'''
-
 def ComputeGradients(X, Y, neural_net, batch_size):
     batch_X = np.array(X[:, 0:0 + batch_size])
     batch_Y = np.array(Y[:, 0:0 + batch_size])
@@ -266,17 +250,6 @@ def ComputeGradsNumSlow(X, Y, neuarl_net, h):
     W_size = np.size(W)
     B_size = np.size(B)
 
-    '''#print(grad_W)
-    #print(grad_b)
-
-    #Init grad vectors for bias and weights
-    for i in range(W_size):
-        grad_W.append(np.zeros(np.size(W[i])))
-
-    for i in range(B_size):
-        grad_b.append(np.zeros(np.size(B[i])))
-    '''
-
     grad_W = []
     grad_b = []
 
@@ -295,17 +268,15 @@ def ComputeGradsNumSlow(X, Y, neuarl_net, h):
             neural_net_try.b = b_try
             c2 = neural_net_try.compute_cost(X, Y)
 
-            #print(c2)
-            #print(c1)
             grad_b[j][i] = (c2 - c1) / (2 * h)
 
     neural_net_try = neural_net
 
     for j in range(W_size):
         grad_W.append(np.zeros(np.shape(W[j])))
-        print(np.size(W[j], axis=0))
+        #print(np.size(W[j], axis=0))
         for i in range(np.size(W[j], axis=0)):
-            print(np.size(W[j], axis=1))
+            #print(np.size(W[j], axis=1))
             for k in range(np.size(W[j], axis=1)):
                 W_try = W
                 W_try[j][i][k] = W_try[j][i][k] - h
@@ -354,13 +325,13 @@ def printOutGradients(grad_analytically, grad_numerically):
 def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
     print("Gradient differences:")
     print("Weights:")
-    for k in range(np.size(grad_W)):
+    for k in range(np.size(grad_W, axis=0)):
         for i in range(np.size(grad_W[k], axis=0)):
             for j in range(np.size(grad_W[k], axis=1)):
                 print(gradient_difference(grad_W[k][i][j], grad_Wn[k][i][j], eps))
 
     print("Bias:")
-    for k in range(np.size(grad_W)):
+    for k in range(np.size(grad_W, axis=0)):
         for i in range(np.size(grad_b[k], axis=0)):
             print(gradient_difference(grad_b[k][i], grad_bn[k][i], eps))
 
@@ -460,9 +431,8 @@ if __name__ == '__main__':
           neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
     print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
 
-    '''penalty_factor = 0
-    batch_size = 100
-    grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1], neural_net,
+
+    '''grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1], neural_net,
                                                            batch_size)
     printOutGradients(grad_analytically, grad_numerically)
 
