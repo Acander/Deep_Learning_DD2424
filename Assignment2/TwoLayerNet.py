@@ -157,9 +157,8 @@ class ANN_two_layer:
         if (batchSize == -1):
             batchSize = 1
 
-        eta_t = self.eta_min
-
         for i in range(0, X.shape[1], batchSize):
+            eta_t = self.updatedLearningRate()
             if self.checkIfTrainingShouldStop():
                 print("Should stop")
                 print(self.t)
@@ -171,7 +170,21 @@ class ANN_two_layer:
             first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
 
             self.update_weights(first_layer, second_layer, eta_t)
-            eta_t = self.updatedLearningRate()
+            self.t += 1
+
+        '''eta_t = self.updatedLearningRate()
+        if self.checkIfTrainingShouldStop():
+            print("Should stop")
+            print(self.t)
+            return 0
+        batchX = X[:, 0:batchSize]
+        batchY = Y[:, 0:batchSize]
+        batchP = self.evaluate_classifier(batchX)
+
+        first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
+
+        self.update_weights(first_layer, second_layer, eta_t)
+        self.t += 1'''
 
     def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
         gradient_W1, gradient_b1 = first_layer_gradient
@@ -186,7 +199,6 @@ class ANN_two_layer:
         self.b[1] = self.b[1] - eta * gradient_b2
 
     def updatedLearningRate(self):
-        self.t += 1
         l = np.floor(self.t / (2 * self.step_size))
         if 2*l*self.step_size <= self.t < (2 * l + 1)*self.step_size:
             return self.evenIterationFunc(l, self.t)
@@ -209,6 +221,16 @@ def load_batch(filename):
     Y = make_one_hot_encoding(len(X), y)
 
     return [np.array(X.astype(float)).transpose(), np.array(Y.astype(float)).transpose(), y.astype(float)]
+
+'''def load_batches(filenames):
+    X, y, Y = [], [], []
+    for i, filename in enumerate(filenames):
+        dict = LoadBatch(filename)
+        X = np.concatenate((X, dict[b'data']))
+        y = np.concatenate((y, dict[b'labels']))
+        Y = np.concatenate((Y, make_one_hot_encoding(len(X), y)))
+
+    return [np.array(X.astype(float)).transpose(), Y.astype(float).transpose(), y.astype(float)]'''
 
 
 def make_one_hot_encoding(batch_size, indices):
@@ -379,8 +401,25 @@ def plot_weight_matrix(weight_matrix):
 
 
 if __name__ == '__main__':
-    training_data = load_batch('data_batch_1')
-    validation_data = load_batch('data_batch_2')
+    [X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
+    [X_train_2, Y_train_2, y_train_2] = load_batch('data_batch_2')
+    [X_train_3, Y_train_3, y_train_3] = load_batch('data_batch_3')
+    [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
+
+    X_train = np.concatenate((X_train_1, X_train_2), axis=1)
+    X_train = np.concatenate((X_train, X_train_3), axis=1)
+    X_train = np.concatenate((X_train, X_train_4), axis=1)
+
+    Y_train = np.concatenate((Y_train_1, Y_train_2), axis=1)
+    Y_train = np.concatenate((Y_train, Y_train_3), axis=1)
+    Y_train = np.concatenate((Y_train, Y_train_4), axis=1)
+
+    y_train = np.concatenate((y_train_1, y_train_2))
+    y_train = np.concatenate((y_train, y_train_3))
+    y_train = np.concatenate((y_train, y_train_4))
+
+    training_data = [X_train, Y_train, y_train]
+    validation_data = load_batch('data_batch_5')
     test_data = load_batch('test_batch')
 
     processed_training_data = pre_process(training_data)
@@ -393,13 +432,13 @@ if __name__ == '__main__':
     lamda = 0.01
     eta_min = 0.00001
     eta_max = 0.1
-    step_size = 500
-    n_cycles = 1
+    step_size = 800
+    n_cycles = 3
     eta_params = eta_min, eta_max, step_size, n_cycles
     neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
 
     batch_size = 100
-    epochs = 40
+    epochs = 1000
     GDparams = batch_size, epochs
 
     tdi = processed_training_data[0]
