@@ -429,13 +429,14 @@ if __name__ == '__main__':
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
     hidden_size = 50
-    lamda = 0.01
+    #lamda = 0.01
     eta_min = 0.00001
     eta_max = 0.1
-    step_size = 800
-    n_cycles = 3
-    eta_params = eta_min, eta_max, step_size, n_cycles
-    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
+    step_size = 500
+    n_cycles = 2
+    #eta_params = eta_min, eta_max, step_size, n_cycles
+    #neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
+    neural_net = 0
 
     batch_size = 100
     epochs = 1000
@@ -448,14 +449,55 @@ if __name__ == '__main__':
     
     train_data = tdi, tdl
     val_data = vdi, vdl
-    
+
+    iterations = 10
+    best_lamda = 0
+    high_val_acc = 0
+    l_min = -5
+    l_max = -1
+    l = l_min + (l_max - l_min) * np.random.uniform(0, 1, iterations)
+    print(l)
+    lamdas = 10 ** l
+    print(lamdas)
+    step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
+    eta_params = eta_min, eta_max, step_size, n_cycles
+
+    #Course search
+    for i in range(iterations):
+        neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[i], eta_params)
+        neural_net.MiniBatchGD(train_data, val_data, GDparams)
+        val_accuracy = neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2])
+        if val_accuracy > high_val_acc:
+            high_val_acc = val_accuracy
+            best_lamda = i
+            print("Best lamda: ", lamdas[best_lamda])
+            print("Val_accuracy: ", high_val_acc)
+
+    lamdas = lamdas[best_lamda] + np.random.uniform(-0.01, 0.01, iterations)
+    iterations = 10
+    best_lamda = 0
+    high_val_acc = 0
+
+    # Narrow search
+    for i in range(iterations):
+        neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[i], eta_params)
+        neural_net.MiniBatchGD(train_data, val_data, GDparams)
+        val_accuracy = neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2])
+        if val_accuracy > high_val_acc:
+            high_val_acc = val_accuracy
+            best_lamda = i
+            print("Best lamda: ", lamdas[best_lamda])
+            print("Val_accuracy: ", high_val_acc)
+
+    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[best_lamda], eta_params)
+    neural_net.MiniBatchGD(train_data, val_data, GDparams)
+
+    '''
     cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
     train_cost, validation_cost = cost
     train_loss, validation_loss = loss
     plot_cost(np.array(train_cost), validation_cost)
-    plot_total_loss(np.array(train_loss), validation_loss)
-    
-    #plot_weight_matrix(neural_net.get_weights())
+    plot_total_loss(np.array(train_loss), validation_loss)'''
 
     print("-----------------------------")
     print("Final train loss: ",
