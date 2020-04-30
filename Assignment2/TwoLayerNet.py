@@ -141,7 +141,6 @@ class ANN_two_layer:
         for i in range(epochs):
             self.fit(X, Y, batch_size)
             if self.checkIfTrainingShouldStop():
-                print("Should stop")
                 break
             train_cost.append(self.compute_cost(X, Y))
             validation_cost.append(self.compute_cost(X_val, Y_val))
@@ -160,8 +159,7 @@ class ANN_two_layer:
         for i in range(0, X.shape[1], batchSize):
             eta_t = self.updatedLearningRate()
             if self.checkIfTrainingShouldStop():
-                print("Should stop")
-                print(self.t)
+                #print(self.t)
                 break
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
@@ -171,20 +169,6 @@ class ANN_two_layer:
 
             self.update_weights(first_layer, second_layer, eta_t)
             self.t += 1
-
-        '''eta_t = self.updatedLearningRate()
-        if self.checkIfTrainingShouldStop():
-            print("Should stop")
-            print(self.t)
-            return 0
-        batchX = X[:, 0:batchSize]
-        batchY = Y[:, 0:batchSize]
-        batchP = self.evaluate_classifier(batchX)
-
-        first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
-
-        self.update_weights(first_layer, second_layer, eta_t)
-        self.t += 1'''
 
     def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
         gradient_W1, gradient_b1 = first_layer_gradient
@@ -221,16 +205,6 @@ def load_batch(filename):
     Y = make_one_hot_encoding(len(X), y)
 
     return [np.array(X.astype(float)).transpose(), np.array(Y.astype(float)).transpose(), y.astype(float)]
-
-'''def load_batches(filenames):
-    X, y, Y = [], [], []
-    for i, filename in enumerate(filenames):
-        dict = LoadBatch(filename)
-        X = np.concatenate((X, dict[b'data']))
-        y = np.concatenate((y, dict[b'labels']))
-        Y = np.concatenate((Y, make_one_hot_encoding(len(X), y)))
-
-    return [np.array(X.astype(float)).transpose(), Y.astype(float).transpose(), y.astype(float)]'''
 
 
 def make_one_hot_encoding(batch_size, indices):
@@ -405,21 +379,31 @@ if __name__ == '__main__':
     [X_train_2, Y_train_2, y_train_2] = load_batch('data_batch_2')
     [X_train_3, Y_train_3, y_train_3] = load_batch('data_batch_3')
     [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
+    [X_train_5, Y_train_5, y_train_5] = load_batch('data_batch_5')
+
+    X_train_5, X_val = np.split(X_train_5, 2, axis=1)
+    Y_train_5, Y_val = np.split(Y_train_5, 2, axis=1)
+    y_train_5, y_val = np.split(y_train_5, 2)
+    print(np.shape(Y_train_5))
 
     X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)
     X_train = np.concatenate((X_train, X_train_4), axis=1)
+    X_train = np.concatenate((X_train, X_train_5), axis=1)
 
     Y_train = np.concatenate((Y_train_1, Y_train_2), axis=1)
     Y_train = np.concatenate((Y_train, Y_train_3), axis=1)
     Y_train = np.concatenate((Y_train, Y_train_4), axis=1)
+    Y_train = np.concatenate((Y_train, Y_train_5), axis=1)
 
     y_train = np.concatenate((y_train_1, y_train_2))
     y_train = np.concatenate((y_train, y_train_3))
     y_train = np.concatenate((y_train, y_train_4))
+    y_train = np.concatenate((y_train, y_train_5))
 
     training_data = [X_train, Y_train, y_train]
-    validation_data = load_batch('data_batch_5')
+    validation_data = [X_val, Y_val, y_val]
+    #validation_data = load_batch('data_batch_5')
     test_data = load_batch('test_batch')
 
     processed_training_data = pre_process(training_data)
@@ -432,7 +416,7 @@ if __name__ == '__main__':
     #lamda = 0.01
     eta_min = 0.00001
     eta_max = 0.1
-    step_size = 500
+    #step_size = 200
     n_cycles = 2
     #eta_params = eta_min, eta_max, step_size, n_cycles
     #neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
@@ -450,36 +434,40 @@ if __name__ == '__main__':
     train_data = tdi, tdl
     val_data = vdi, vdl
 
-    iterations = 10
+    iterations_c = 10
     best_lamda = 0
     high_val_acc = 0
     l_min = -5
     l_max = -1
-    l = l_min + (l_max - l_min) * np.random.uniform(0, 1, iterations)
+    l = l_min + (l_max - l_min) * np.random.uniform(0, 1, iterations_c)
     print(l)
-    lamdas = 10 ** l
-    print(lamdas)
+    lamdas_course = 10 ** l
+    print(lamdas_course)
     step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
     eta_params = eta_min, eta_max, step_size, n_cycles
 
-    #Course search
-    for i in range(iterations):
-        neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[i], eta_params)
+    print("COURSE SEARCH")
+    for i in range(iterations_c):
+        print("Iteration: ", i)
+        neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas_course[i], eta_params)
         neural_net.MiniBatchGD(train_data, val_data, GDparams)
         val_accuracy = neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2])
         if val_accuracy > high_val_acc:
             high_val_acc = val_accuracy
             best_lamda = i
-            print("Best lamda: ", lamdas[best_lamda])
+            print("Best lamda: ", lamdas_course[best_lamda])
             print("Val_accuracy: ", high_val_acc)
 
-    lamdas = lamdas[best_lamda] + np.random.uniform(-0.01, 0.01, iterations)
+    margins_of_search = 0.00001
+    lamdas = lamdas_course[best_lamda] + np.random.uniform(-margins_of_search, margins_of_search, iterations_c)
+    lamdas = np.concatenate((lamdas_course, lamdas))
     iterations = 10
-    best_lamda = 0
-    high_val_acc = 0
 
-    # Narrow search
-    for i in range(iterations):
+    print("\n")
+
+    print("NARROW ITERATION")
+    for i in range(iterations_c, iterations_c + iterations):
+        print("Iteration: ", i)
         neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[i], eta_params)
         neural_net.MiniBatchGD(train_data, val_data, GDparams)
         val_accuracy = neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2])
