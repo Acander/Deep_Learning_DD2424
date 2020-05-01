@@ -149,10 +149,10 @@ class ANN_two_layer:
         for i in range(epochs):
             cost, loss = self.fit(X, Y, X_val, Y_val, batch_size)
 
-            train_cost = np.concatenate((train_cost, cost[0]))
+            '''train_cost = np.concatenate((train_cost, cost[0]))
             validation_cost = np.concatenate((validation_cost, cost[1]))
             train_loss = np.concatenate((train_loss, loss[0]))
-            validation_loss = np.concatenate((validation_loss, loss[1]))
+            validation_loss = np.concatenate((validation_loss, loss[1]))'''
             if self.checkIfTrainingShouldStop():
                 break
 
@@ -173,7 +173,7 @@ class ANN_two_layer:
             batchSize = 1
 
         for i in range(0, X.shape[1], batchSize):
-            print(i)
+            #print(i)
             eta_t = self.updatedLearningRate()
             if self.checkIfTrainingShouldStop():
                 #print(self.t)
@@ -187,14 +187,14 @@ class ANN_two_layer:
             self.update_weights(first_layer, second_layer, eta_t)
             self.t += 1
 
-            if i % 1000 == 0:
+            '''if i % 1000 == 0:
                 #print("Compute cost and loss")
                 tc, tl = self.compute_cost_and_loss(X, Y)
                 vc, vl = self.compute_cost_and_loss(X_val, Y_val)
                 train_cost.append(tc)
                 val_cost.append(vc)
                 train_loss.append(tl)
-                val_loss.append(vl)
+                val_loss.append(vl)'''
 
         cost = [train_cost, val_cost]
         loss = [train_loss, val_loss]
@@ -457,7 +457,7 @@ if __name__ == '__main__':
     step_size = 800
     #step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
 
-    n_cycles = 3
+    n_cycles = 2
     eta_params = eta_min, eta_max, step_size, n_cycles
     neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
     #neural_net = 0
@@ -475,7 +475,10 @@ if __name__ == '__main__':
     val_data = vdi, vdl
     #neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
-    '''iterations_c = 10
+    #Lambda optimization
+    ####################################################################
+
+    iterations_c = 10
     best_lamda = 0
     high_val_acc = 0
     l_min = -5
@@ -499,14 +502,14 @@ if __name__ == '__main__':
             print("Best lamda: ", lamdas_course[best_lamda])
             print("Val_accuracy: ", high_val_acc)
 
-    margins_of_search = 0.00001
+    margins_of_search = 0.01
     lamdas = lamdas_course[best_lamda] + np.random.uniform(-margins_of_search, margins_of_search, iterations_c)
     lamdas = np.concatenate((lamdas_course, lamdas))
     iterations = 10
 
     print("\n")
 
-    print("NARROW ITERATION")
+    print("FINE SEARCH")
     for i in range(iterations_c, iterations_c + iterations):
         print("Iteration: ", i)
         neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[i], eta_params)
@@ -518,18 +521,19 @@ if __name__ == '__main__':
             print("Best lamda: ", lamdas[best_lamda])
             print("Val_accuracy: ", high_val_acc)
 
-    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[best_lamda], eta_params)
-    neural_net.MiniBatchGD(train_data, val_data, GDparams)'''
+    #neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamdas[best_lamda], eta_params)
+    #neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
+    ############################################################################
 
-    cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
+    '''cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
     train_cost, validation_cost = cost
     train_loss, validation_loss = loss
     plot_cost(np.array(train_cost), validation_cost)
-    plot_total_loss(np.array(train_loss), validation_loss)
+    plot_total_loss(np.array(train_loss), validation_loss)'''
 
-    print("Time steps performed: ", neural_net.t)
-    print("Train Cost length: ", np.size(train_cost))
+    '''print("Time steps performed: ", neural_net.t)
+    print("Train Cost length: ", np.size(train_cost))'''
 
     #train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])
 
@@ -539,12 +543,12 @@ if __name__ == '__main__':
           neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1]))
     print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1]))'''
 
-    print("------------------------------")
+    '''print("------------------------------")
     print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
     print("Final validation accuracy: ",
           neural_net.compute_accuracy(processed_validation_data[0], processed_validation_data[2]))
     print("Final test accuracy: ", neural_net.compute_accuracy(processed_test_data[0], processed_test_data[2]))
-
+'''
 
     '''grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1], neural_net,
                                                            batch_size)
