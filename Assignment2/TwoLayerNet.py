@@ -65,15 +65,19 @@ class ANN_two_layer:
 
         penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
         cost = norm_factor * sum_entropy + penalty_term
-        loss = sum_entropy
+        #loss = sum_entropy
+        loss = norm_factor*sum_entropy
         return cost, loss
 
     def cross_entropy(self, p, y):
         # s: softmax network output
         # y: expected output - one-hot encoding
-        p = np.array(p).reshape((np.size(p), 1))
-        y = np.array(y).reshape((1, np.size(y)))
-        return -np.log10(y.dot(p)[0][0])
+        #p = np.array(p).reshape((np.size(p), 1))
+        #y = np.array(y).reshape((1, np.size(y)))
+        #y = np.array(y).reshape((np.size(y), 1))
+        #p = np.array(p).reshape((1, np.size(p)))
+        #return -np.log10(y.dot(p))
+        return -np.log10(np.dot(np.array(y), p))
 
     '''def compute_total_loss(self, X, Y):
         P = self.evaluate_classifier(X)
@@ -360,8 +364,8 @@ def print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps):
 
 
 def plot_cost(train_cost, val_cost):
-    plt.plot(np.arange(np.size(train_cost)), train_cost, color='blue', label='Training Loss')
-    plt.plot(np.arange(np.size(val_cost)), val_cost, color='red', label='Validation Loss')
+    plt.plot(np.arange(np.size(train_cost)), train_cost, color='blue', label='Training')
+    plt.plot(np.arange(np.size(val_cost)), val_cost, color='red', label='Validation')
 
     xMin = 0
     xMax = train_cost.size
@@ -379,8 +383,8 @@ def plot_cost(train_cost, val_cost):
 
 
 def plot_total_loss(train_loss, val_loss):
-    plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training Loss')
-    plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation Loss')
+    plt.plot(np.arange(np.size(train_loss)), train_loss, color='blue', label='Training')
+    plt.plot(np.arange(np.size(val_loss)), val_loss, color='red', label='Validation')
 
     xMin = 0
     xMax = train_loss.size
@@ -450,10 +454,10 @@ if __name__ == '__main__':
     eta_min = 0.00001
     eta_max = 0.1
     batch_size = 100
-    step_size = 500
+    step_size = 800
     #step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
 
-    n_cycles = 1
+    n_cycles = 3
     eta_params = eta_min, eta_max, step_size, n_cycles
     neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
     #neural_net = 0
