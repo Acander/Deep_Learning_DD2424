@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
+      <change afterPath="$PROJECT_DIR$/Assignment3/MultilayerNet.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Assignment3/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -34,10 +35,10 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/Assignment2/TwoLayerNet.py">
+        <entry file="file://$PROJECT_DIR$/Assignment3/MultilayerNet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-647">
-              <caret line="447" column="16" selection-start-line="447" selection-start-column="16" selection-end-line="447" selection-end-column="16" />
+            <state relative-caret-position="931">
+              <caret line="41" lean-forward="true" selection-start-line="41" selection-end-line="41" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
               </folding>
@@ -76,14 +77,15 @@
         <option value="$PROJECT_DIR$/TestTensorFlow/main.py" />
         <option value="$PROJECT_DIR$/TestTensorFlow/Main.py" />
         <option value="$PROJECT_DIR$/Assignment2/TwoLayerNet.py" />
+        <option value="$PROJECT_DIR$/Assignment3/MultilayerNet.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2352" />
-    <option name="y" value="225" />
-    <option name="width" value="1440" />
-    <option name="height" value="810" />
+    <option name="x" value="1912" />
+    <option name="y" value="-8" />
+    <option name="width" value="976" />
+    <option name="height" value="1096" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
@@ -100,20 +102,7 @@
             <path>
               <item name="Deep_Learning_DD2424" type="b2602c69:ProjectViewProjectNode" />
               <item name="Deep_Learning_DD2424" type="462c0819:PsiDirectoryNode" />
-              <item name="Assignment2" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Deep_Learning_DD2424" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Deep_Learning_DD2424" type="462c0819:PsiDirectoryNode" />
-              <item name="Assignment2" type="462c0819:PsiDirectoryNode" />
-              <item name="Datasets" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Deep_Learning_DD2424" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Deep_Learning_DD2424" type="462c0819:PsiDirectoryNode" />
-              <item name="Assignment2" type="462c0819:PsiDirectoryNode" />
-              <item name="Datasets" type="462c0819:PsiDirectoryNode" />
-              <item name="cifar-10-batches-py" type="462c0819:PsiDirectoryNode" />
+              <item name="Assignment3" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -124,19 +113,20 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/Assignment2/Plots" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
-    <key name="CopyFile.RECENT_KEYS">
-      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2\Datasets" />
-      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2" />
-    </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2" />
       <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment1\Images" />
+    </key>
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment3" />
+      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2\Datasets" />
+      <recent name="C:\Users\adria\PycharmProjects\Deep_Learning_DD2424\Assignment2" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -270,22 +260,25 @@
       <workItem from="1587751162009" duration="24720000" />
       <workItem from="1587981903159" duration="33059000" />
       <workItem from="1588094623196" duration="17446000" />
-      <workItem from="1588337501811" duration="29191000" />
+      <workItem from="1588337501811" duration="29808000" />
+      <workItem from="1588508281759" duration="225000" />
+      <workItem from="1588532972103" duration="4121000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="331019000" />
+    <option name="totallyTimeSpent" value="335982000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1216" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.11513859" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.09488273" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.2751616" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.2751616" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -430,10 +423,23 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment2/functions.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
     <entry file="file://$PROJECT_DIR$/Assignment2/TwoLayerNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-647">
-          <caret line="447" column="16" selection-start-line="447" selection-start-column="16" selection-end-line="447" selection-end-column="16" />
+        <state relative-caret-position="6477">
+          <caret line="381" column="14" lean-forward="true" selection-start-line="381" selection-start-column="14" selection-end-line="381" selection-end-column="14" />
+          <folding>
+            <element signature="e#0#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment3/MultilayerNet.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="931">
+          <caret line="41" lean-forward="true" selection-start-line="41" selection-end-line="41" />
           <folding>
             <element signature="e#0#41#0" expanded="true" />
           </folding>
