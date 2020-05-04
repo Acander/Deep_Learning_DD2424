@@ -77,10 +77,8 @@ class ANN_multilayer:
 
         return correct_answers / np.size(P, axis=1)
 
-    def compute_gradients(self, X_batch, Y_batch, P_batch, batch_size):
+    def compute_gradients(self, X_batch, Y_batch, P_batch, batch_size, eta):
         # We backprop the gradient G through the net #
-        gradients_w = []
-        gradients_b = []
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         n_hidden_layers = self.n_layers-2
@@ -89,17 +87,15 @@ class ANN_multilayer:
             G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers-l], self.hidden_layers_batch[n_hidden_layers-l-1])
             gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers-l]
             gradient_bl = dloss_bl
-            #layer = [gradient_Wl, gradient_bl]
-            gradients_w.append(gradient_Wl)
-            gradients_b.append(gradient_bl)
+            gradients = gradient_Wl, gradient_bl
+            self.update_weights(gradients, n_hidden_layers-l, eta)
+
 
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
         gradient_W1 = dloss_W1 + 2 * self.lamda * self.weights[0]
         gradient_b1 = dloss_b1
-        layer = [gradient_W1, gradient_b1]
-        gradients_w.append(gradient_W1)
-        gradients_b.append(gradient_b1)
-        return gradients_w.reverse(), gradients_b.reverse()
+        gradients = gradient_W1, gradient_b1
+        self.update_weights(gradients, 0, eta)
 
     def init_G_batch(self, Y_batch, P_batch):
         return np.array(-(Y_batch - P_batch))
@@ -162,9 +158,7 @@ class ANN_multilayer:
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX)
 
-            gradients = self.compute_gradients(batchX, batchY, batchP, batchSize)
-
-            self.update_weights(gradients, eta_t)
+            self.compute_gradients(batchX, batchY, batchP, batchSize, eta_t)
             self.t += 1
 
             '''if i % 1000 == 0:
@@ -181,16 +175,12 @@ class ANN_multilayer:
 
         return cost, loss
 
-    def update_weights(self, gradients, eta):
-        #TODO Place inside compute_gradients!!!
-        gradient_W, gradient_b = gradients
-        for i in range(len(gradient_W)):
-            gradient_Wl = gradient_W[i]
-            gradient_bl = gradient_b[i]
-            gradient_bl = np.reshape(gradient_bl, (np.size(gradient_bl), 1))
+    def update_weights(self, gradients, weight, eta):
+        gradient_Wl, gradient_bl = gradients
 
-            self.weights[i] = self.weights[i] - eta * gradient_Wl
-            self.biases[i] = self.biases[i] - eta * gradient_bl
+        gradient_bl = np.reshape(gradient_bl, (np.size(gradient_bl), 1))
+        self.weights[weight] = self.weights[weight] - eta * gradient_Wl
+        self.biases[weight] = self.biases[weight] - eta * gradient_bl
 
     def updatedLearningRate(self):
         l = np.floor(self.t / (2 * self.step_size))
@@ -430,13 +420,14 @@ if __name__ == '__main__':
     input_size = np.size(processed_training_data[0], axis=0)
     layers = [input_size, 50, output_size]
 
-    lamda = 0.0010995835253050919
-    #lamda = 0
+    #lamda = 0.0010995835253050919
+    lamda = 0.005
     eta_min = 0.00001
     eta_max = 0.1
     batch_size = 100
     #step_size = 800
-    step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
+    #step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
+    
 
     n_cycles = 3
     eta_params = eta_min, eta_max, step_size, n_cycles
