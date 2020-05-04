@@ -159,9 +159,9 @@ class ANN_two_layer:
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX)
 
-            first_layer, second_layer = self.compute_gradients(batchX, batchY, batchP, batchSize)
+            gradients = self.compute_gradients(batchX, batchY, batchP, batchSize)
 
-            self.update_weights(first_layer, second_layer, eta_t)
+            self.update_weights(gradients, eta_t)
             self.t += 1
 
             if i % 1000 == 0:
@@ -178,17 +178,13 @@ class ANN_two_layer:
 
         return cost, loss
 
-    def update_weights(self, first_layer_gradient, second_layer_gradient, eta):
-        gradient_W1, gradient_b1 = first_layer_gradient
-        gradient_W2, gradient_b2 = second_layer_gradient
+    def update_weights(self, gradients, eta):
+        for i, gradient in enumerate(gradients):
+            gradient_Wl, gradient_bl = gradient
+            gradient_bl = np.reshape(gradient_bl, (np.size(gradient_bl), 1))
 
-        gradient_b1 = np.reshape(gradient_b1, (np.size(gradient_b1), 1))
-        gradient_b2 = np.reshape(gradient_b2, (np.size(gradient_b2), 1))
-
-        self.w[0] = self.w[0] - eta * gradient_W1
-        self.w[1] = self.w[1] - eta * gradient_W2
-        self.b[0] = self.b[0] - eta * gradient_b1
-        self.b[1] = self.b[1] - eta * gradient_b2
+            self.weights[i] = self.weights[i] - eta * gradient_Wl
+            self.biases[i] = self.biases[i] - eta * gradient_bl
 
     def updatedLearningRate(self):
         l = np.floor(self.t / (2 * self.step_size))
