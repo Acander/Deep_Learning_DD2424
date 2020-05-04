@@ -33,23 +33,17 @@ class ANN_two_layer:
         hidden_layer = 0
         for i in range(self.n_layers-2):
             hidden_index = i + 1
-            S_l = self.compute_hidden(S_l)
-            hidden_layer = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))
-            self.hidden_layers_batch[hidden_index] = hidden_layer
-        P = softmax(self.compute_output(hidden_layer))
+            S_l = self.compute_hidden(S_l, hidden_index)
+            S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))
+            self.hidden_layers_batch[hidden_index] = S_l
+        P = softmax(self.compute_hidden(S_l, self.n_layers-1))
         return P
 
 
-    def compute_hidden(self, X):
+    def compute_hidden(self, X, layer):
         sum_matrix = np.ones((1, np.size(X, axis=1)))
-        S_1 = self.w[0].dot(X) + self.b[0].dot(sum_matrix)
+        S_1 = self.weights[layer-1].dot(X) + self.biases[layer-1].dot(sum_matrix)
         return S_1
-
-
-    def compute_output(self, S_1):
-        sum_matrix = np.ones((1, np.size(S_1, axis=1)))
-        S = self.w[1].dot(S_1) + self.b[1].dot(sum_matrix)
-        return S
 
     def compute_cost_and_loss(self, X, Y):
         norm_factor = 1 / np.size(X, axis=1)
@@ -85,22 +79,24 @@ class ANN_two_layer:
 
     def compute_gradients(self, X_batch, Y_batch, P_batch, batch_size):
         # We backprop the gradient G through the net #
+        gradients = []
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
-        dloss_W2, dloss_b2 = self.get_weight_gradient(self.hidden_layer_batch, G_batch, batch_size)
-        G_batch = self.propagate_G_batch(G_batch, self.w[1], self.hidden_layer_batch)
+        n_hidden_layers = self.n_layers-2
+        for l in range(n_hidden_layers):
+            dloss_Wl, dloss_bl = self.get_weight_gradient(self.hidden_layers_batch[n_hidden_layers-l-1], G_batch, batch_size)
+            G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers-l-1], self.hidden_layers_batch[n_hidden_layers-l-1])
+            gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers-l-1]
+            gradient_bl = dloss_bl
+            layer = gradient_Wl, gradient_bl
+            gradients.append(layer)
+
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
-
-
-        gradient_W1 = dloss_W1 + 2 * self.lamda * self.w[0]
+        gradient_W1 = dloss_W1 + 2 * self.lamda * self.weights[0]
         gradient_b1 = dloss_b1
-
-        gradient_W2 = dloss_W2 + 2 * self.lamda * self.w[1]
-        gradient_b2 = dloss_b2
-
-        first_layer = gradient_W1, gradient_b1
-        second_layer = gradient_W2, gradient_b2
-        return [first_layer, second_layer]
+        layer = gradient_W1, gradient_b1
+        gradients.append(layer)
+        return gradients.reverse()
 
     def init_G_batch(self, Y_batch, P_batch):
         return np.array(-(Y_batch - P_batch))
