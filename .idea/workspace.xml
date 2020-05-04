@@ -35,8 +35,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Assignment3/MultilayerNet.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-5750">
-              <caret line="189" column="51" lean-forward="true" selection-start-line="189" selection-start-column="51" selection-end-line="189" selection-end-column="51" />
+            <state relative-caret-position="461">
+              <caret line="513" column="121" selection-start-line="513" selection-start-column="121" selection-end-line="513" selection-end-column="121" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
               </folding>
@@ -100,7 +100,7 @@
             <path>
               <item name="Deep_Learning_DD2424" type="b2602c69:ProjectViewProjectNode" />
               <item name="Deep_Learning_DD2424" type="462c0819:PsiDirectoryNode" />
-              <item name="Assignment3" type="462c0819:PsiDirectoryNode" />
+              <item name="Assignment2" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -260,12 +260,12 @@
       <workItem from="1588094623196" duration="17446000" />
       <workItem from="1588337501811" duration="29808000" />
       <workItem from="1588508281759" duration="225000" />
-      <workItem from="1588532972103" duration="9306000" />
+      <workItem from="1588532972103" duration="12690000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="341167000" />
+    <option name="totallyTimeSpent" value="344551000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1216" extended-state="6" />
@@ -436,8 +436,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Assignment3/MultilayerNet.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-5750">
-          <caret line="189" column="51" lean-forward="true" selection-start-line="189" selection-start-column="51" selection-end-line="189" selection-end-column="51" />
+        <state relative-caret-position="461">
+          <caret line="513" column="121" selection-start-line="513" selection-start-column="121" selection-end-line="513" selection-end-column="121" />
           <folding>
             <element signature="e#0#41#0" expanded="true" />
           </folding>

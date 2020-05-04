@@ -4,7 +4,7 @@ from Assignment1.functions import montage
 import numpy as np
 import matplotlib.pyplot as plt
 
-class ANN_two_layer:
+class ANN_multilayer:
 
     def __init__(self, layers, lamda, eta_params):
         '''The 'layers' parameter is an array of integers, each representing the size of a hidden layer.'''
@@ -18,10 +18,10 @@ class ANN_two_layer:
         self.weights = []
         self.biases = []
 
-        for i, layer in range(self.n_layers-1):
+        for i in range(self.n_layers-1):
             self.weights.append(np.random.normal(mu, sigma, (layers[i+1], layers[i])))
             self.biases.append(np.zeros((layers[i+1], 1)))
-            self.hidden_layers_batch.append(np.matrix((hidden_size, 1)))
+            self.hidden_layers_batch.append(np.matrix((layers[i+1], 1)))
 
         # Parameters related to cyclic learning rate:
         self.eta_min, self.eta_max, self.step_size, self.n_cycles = eta_params
@@ -164,14 +164,14 @@ class ANN_two_layer:
             self.update_weights(gradients, eta_t)
             self.t += 1
 
-            if i % 1000 == 0:
+            '''if i % 1000 == 0:
                 #print("Compute cost and loss")
                 tc, tl = self.compute_cost_and_loss(X, Y)
                 vc, vl = self.compute_cost_and_loss(X_val, Y_val)
                 train_cost.append(tc)
                 val_cost.append(vc)
                 train_loss.append(tl)
-                val_loss.append(vl)
+                val_loss.append(vl)'''
 
         cost = [train_cost, val_cost]
         loss = [train_loss, val_loss]
@@ -392,8 +392,6 @@ if __name__ == '__main__':
     [X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
     [Y_train_5, Y_val] = np.split(Y_train_5, [9000], axis=1)
     [y_train_5, y_val] = np.split(y_train_5, [9000])
-    print(np.shape(Y_train_5))
-    print(np.shape(Y_val))
 
     X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)
@@ -410,16 +408,12 @@ if __name__ == '__main__':
     y_train = np.concatenate((y_train, y_train_4))
     y_train = np.concatenate((y_train, y_train_5))
 
-    #TODO Add 4000 val data to training data
-
     training_data = [X_train, Y_train, y_train]
     validation_data = [X_val, Y_val, y_val]
-    #validation_data = load_batch('data_batch_5')
     test_data = load_batch('test_batch')
 
     '''training_data = load_batch('data_batch_1')
     validation_data = load_batch('data_batch_2')
-    # validation_data = load_batch('data_batch_5')
     test_data = load_batch('test_batch')'''
 
     processed_training_data = pre_process(training_data)
@@ -428,9 +422,10 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
-    hidden_size = 50
+    layers = [input_size, 50, output_size]
+
     lamda = 0.0010995835253050919
-    #lamda = 0.01
+    #lamda = 0
     eta_min = 0.00001
     eta_max = 0.1
     batch_size = 100
@@ -439,10 +434,8 @@ if __name__ == '__main__':
 
     n_cycles = 3
     eta_params = eta_min, eta_max, step_size, n_cycles
-    neural_net = ANN_two_layer(input_size, hidden_size, output_size, lamda, eta_params)
-    #neural_net = 0
+    neural_net = ANN_multilayer(layers, lamda, eta_params)
 
-    #batch_size = 100
     epochs = 1000
     GDparams = batch_size, epochs
 
@@ -510,21 +503,21 @@ if __name__ == '__main__':
     ############################################################################'''
 
     cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
-    train_cost, validation_cost = cost
+    '''train_cost, validation_cost = cost
     train_loss, validation_loss = loss
     plot_cost(np.array(train_cost), validation_cost)
     plot_total_loss(np.array(train_loss), validation_loss)
 
-    '''print("Time steps performed: ", neural_net.t)
-    print("Train Cost length: ", np.size(train_cost))'''
+    print("Time steps performed: ", neural_net.t)
+    print("Train Cost length: ", np.size(train_cost))
 
-    #train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])
+    #train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])'''
 
-    '''print("-----------------------------")
+    print("-----------------------------")
     print("Final train loss: ", )
     print("Final validation loss: ",
           neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1]))
-    print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1]))'''
+    print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1]))
 
     print("------------------------------")
     print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
