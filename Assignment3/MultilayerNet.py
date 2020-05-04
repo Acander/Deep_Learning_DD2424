@@ -31,12 +31,12 @@ class ANN_multilayer:
     def evaluate_classifier(self, X):
         S_l = X
         hidden_layer = 0
-        for i in range(self.n_layers-2):
+        for i in range(self.n_layers-1):
             hidden_index = i + 1
             S_l = self.compute_hidden(S_l, hidden_index)
             S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))
-            self.hidden_layers_batch[hidden_index] = S_l
-        P = softmax(self.compute_hidden(S_l, self.n_layers-1))
+            self.hidden_layers_batch[i] = S_l
+        P = softmax(S_l)
         return P
 
 
@@ -79,24 +79,27 @@ class ANN_multilayer:
 
     def compute_gradients(self, X_batch, Y_batch, P_batch, batch_size):
         # We backprop the gradient G through the net #
-        gradients = []
+        gradients_w = []
+        gradients_b = []
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         n_hidden_layers = self.n_layers-2
         for l in range(n_hidden_layers):
             dloss_Wl, dloss_bl = self.get_weight_gradient(self.hidden_layers_batch[n_hidden_layers-l-1], G_batch, batch_size)
-            G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers-l-1], self.hidden_layers_batch[n_hidden_layers-l-1])
-            gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers-l-1]
+            G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers-l], self.hidden_layers_batch[n_hidden_layers-l-1])
+            gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers-l]
             gradient_bl = dloss_bl
-            layer = gradient_Wl, gradient_bl
-            gradients.append(layer)
+            #layer = [gradient_Wl, gradient_bl]
+            gradients_w.append(gradient_Wl)
+            gradients_b.append(gradient_bl)
 
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
         gradient_W1 = dloss_W1 + 2 * self.lamda * self.weights[0]
         gradient_b1 = dloss_b1
-        layer = gradient_W1, gradient_b1
-        gradients.append(layer)
-        return gradients.reverse()
+        layer = [gradient_W1, gradient_b1]
+        gradients_w.append(gradient_W1)
+        gradients_b.append(gradient_b1)
+        return gradients_w.reverse(), gradients_b.reverse()
 
     def init_G_batch(self, Y_batch, P_batch):
         return np.array(-(Y_batch - P_batch))
@@ -179,8 +182,11 @@ class ANN_multilayer:
         return cost, loss
 
     def update_weights(self, gradients, eta):
-        for i, gradient in enumerate(gradients):
-            gradient_Wl, gradient_bl = gradient
+        #TODO Place inside compute_gradients!!!
+        gradient_W, gradient_b = gradients
+        for i in range(len(gradient_W)):
+            gradient_Wl = gradient_W[i]
+            gradient_bl = gradient_b[i]
             gradient_bl = np.reshape(gradient_bl, (np.size(gradient_bl), 1))
 
             self.weights[i] = self.weights[i] - eta * gradient_Wl
@@ -513,11 +519,11 @@ if __name__ == '__main__':
 
     #train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])'''
 
-    print("-----------------------------")
+    '''print("-----------------------------")
     print("Final train loss: ", )
     print("Final validation loss: ",
           neural_net.compute_cost(processed_validation_data[0], processed_validation_data[1]))
-    print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1]))
+    print("Final test loss: ", neural_net.compute_cost(processed_test_data[0], processed_test_data[1]))'''
 
     print("------------------------------")
     print("Final train accuracy: ", neural_net.compute_accuracy(processed_training_data[0], processed_training_data[2]))
