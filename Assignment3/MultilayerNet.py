@@ -418,7 +418,7 @@ if __name__ == '__main__':
 
     output_size = np.size(processed_training_data[1], axis=0)
     input_size = np.size(processed_training_data[0], axis=0)
-    layers = [input_size, 50, output_size]
+    layers = [input_size, 50, 50, output_size]
 
     #lamda = 0.0010995835253050919
     lamda = 0.005
@@ -427,9 +427,9 @@ if __name__ == '__main__':
     batch_size = 100
     #step_size = 800
     #step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
-    
+    step_size = 5*45000/batch_size
 
-    n_cycles = 3
+    n_cycles = 2
     eta_params = eta_min, eta_max, step_size, n_cycles
     neural_net = ANN_multilayer(layers, lamda, eta_params)
 
