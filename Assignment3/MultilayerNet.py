@@ -3,6 +3,10 @@ from Assignment1.functions import LoadBatch
 from Assignment1.functions import montage
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+
+eps = sys.float_info.epsilon
+
 
 class ANN_multilayer:
 
@@ -10,40 +14,80 @@ class ANN_multilayer:
         '''The 'layers' parameter is an array of integers, each representing the size of a hidden layer.'''
 
         mu, sigma = 0, 0.01
-        self.n_layers = len(layers) #Including input and output layers
+        self.n_layers = len(layers)  # Including input and output layers
         self.layers = layers
 
         self.lamda = lamda
+        self.inputs_batch = []
         self.hidden_layers_batch = []
+        self.hidden_layers_mod_batch = []
+        self.final_prob_batch = []
         self.weights = []
         self.biases = []
 
-        for i in range(self.n_layers-1):
-            self.weights.append(np.random.normal(mu, sigma, (layers[i+1], layers[i])))
-            self.biases.append(np.zeros((layers[i+1], 1)))
-            self.hidden_layers_batch.append(np.matrix((layers[i+1], 1)))
+        # Batch Normalization
+        self.batch_means = np.array(self.n_layers)
+        self.batch_variances = np.array(self.n_layers)
+        self.gammas = []
+        self.betas = []
+
+        for i in range(self.n_layers - 1):
+            self.weights.append(np.random.normal(mu, sigma, (layers[i + 1], layers[i])))
+            self.biases.append(np.zeros((layers[i + 1], 1)))
+            self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
+            self.betas.append(np.zeros((layers[i + 1], 1)))
+
+        for i in range(self.n_layers-2):
+            self.inputs_batch.append(np.matrix((layers[i + 1], 1)))
+            self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
+            self.hidden_layers_mod_batch.append(np.matrix((layers[i + 1], 1)))
+            # self.networks_final_prob_batch.append(np.matrix((layers[i + 1], 1)))
 
         # Parameters related to cyclic learning rate:
         self.eta_min, self.eta_max, self.step_size, self.n_cycles = eta_params
         self.t = 1
 
-
-    def evaluate_classifier(self, X):
+    def evaluate_classifier(self, X, training=False):
         S_l = X
         hidden_layer = 0
-        for i in range(self.n_layers-1):
+        for i in range(self.n_layers - 2):
             hidden_index = i + 1
-            S_l = self.compute_hidden(S_l, hidden_index)
-            S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))
-            self.hidden_layers_batch[i] = S_l
+            self.inputs_batch[i] = S_l
+            self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, hidden_index)
+            self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, training)
+            S_l = self.compute_scale_shift(S_l, hidden_index)
+            S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
+        S_l = self.compute_hidden(S_l, self.n_layers - 1)
         P = softmax(S_l)
         return P
 
+    def batch_normalization(self, S_i, layer, training=False):
+        if training:
+            batch_mean_l, batch_variance_l = self.batch_prep(S_i)
+            self.batch_means[layer] = batch_mean_l
+            self.batch_variances[layer] = batch_variance_l
+        else:
+            batch_mean_l = self.batch_means[layer]
+            batch_variance_l = self.batch_variances[layer]
+        return (S_i - batch_mean_l) / np.sqrt(batch_variance_l + eps)
+
+    def batch_prep(self, S_i):
+        batch_size = np.size(S_i, axis=1)
+        batch_mean = np.sum(S_i, axis=1) / batch_size  # 13
+        print(np.shape(S_i))
+        print(np.shape(batch_mean))
+        batch_variance = np.sum((S_i - batch_mean) ** 2) # 14
+        return batch_mean, batch_variance
 
     def compute_hidden(self, X, layer):
-        sum_matrix = np.ones((1, np.size(X, axis=1)))
-        S_1 = self.weights[layer-1].dot(X) + self.biases[layer-1].dot(sum_matrix)
-        return S_1
+        # sum_matrix = np.ones((1, np.size(X, axis=1)))
+        S_l = self.weights[layer - 1].dot(X) + self.biases[layer - 1]
+        return S_l
+
+    def compute_scale_shift(self, S_l, layer):
+        # sum_matrix = np.ones((1, np.size(S_l, axis=1)))
+        S_l = self.gammas[layer - 1] * S_l + self.biases[layer - 1]
+        return S_l
 
     def compute_cost_and_loss(self, X, Y):
         norm_factor = 1 / np.size(X, axis=1)
@@ -57,7 +101,7 @@ class ANN_multilayer:
 
         penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
         cost = norm_factor * sum_entropy + penalty_term
-        loss = norm_factor*sum_entropy
+        loss = norm_factor * sum_entropy
         return cost, loss
 
     def cross_entropy(self, p, y):
@@ -81,14 +125,11 @@ class ANN_multilayer:
         # We backprop the gradient G through the net #
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
-        n_hidden_layers = self.n_layers-2
-        for l in range(n_hidden_layers):
-            dloss_Wl, dloss_bl = self.get_weight_gradient(self.hidden_layers_batch[n_hidden_layers-l-1], G_batch, batch_size)
-            G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers-l], self.hidden_layers_batch[n_hidden_layers-l-1])
-            gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers-l]
-            gradient_bl = dloss_bl
-            gradients = gradient_Wl, gradient_bl
-            self.update_weights(gradients, n_hidden_layers-l, eta)
+        n_hidden_layers = self.n_layers - 2
+        G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, n_hidden_layers-1, batch_size)
+        for l in range(n_hidden_layers-1):
+
+            G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, l, batch_size)
 
 
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
@@ -107,13 +148,54 @@ class ANN_multilayer:
 
     def propagate_G_batch(self, G_batch, weight, input):
         G_batch = weight.transpose().dot(G_batch)
-        G_batch = G_batch * np.where(input > 0, input/input, input*0)
+        G_batch = G_batch * np.where(input > 0, input / input, input * 0)
         return G_batch
+
+    def update_network_params(self, G_batch, n_hidden_layers, eta, l, batch_size):
+        dloss_Wl, dloss_bl = self.get_weight_gradient(self.hidden_layers_batch[n_hidden_layers - l - 1], G_batch,
+                                                      batch_size)
+        G_batch = self.propagate_G_batch(G_batch, self.weights[n_hidden_layers - l],
+                                         self.hidden_layers_batch[n_hidden_layers - l - 1])
+        gradient_Wl = dloss_Wl + 2 * self.lamda * self.weights[n_hidden_layers - l]
+        gradient_bl = dloss_bl
+        gradients = gradient_Wl, gradient_bl
+        self.update_weights(gradients, n_hidden_layers - l, eta)
+        return G_batch
+
+    def update_batch_norm_params(self, G_batch, n_hidden_layers, eta, l, batch_size, weight):
+        gradients = self.get_batch_gradient(G_batch, batch_size, l)
+        G_batch = G_batch*(self.gammas[l].dot(np.ones((1, batch_size))))
+        G_batch = self.BatchNormBackPass(G_batch, l, batch_size)
+        self.update_BM_params(gradients, weight, eta)
+        return G_batch
+
+    def get_batch_gradient(self, G_batch, batch_size, l):
+        dloss_gammal = np.sum(G_batch * self.hidden_layers_mod_batch[l], axis=1)/batch_size
+        dloss_betal = np.sum(G_batch)/batch_size
+        return dloss_gammal, dloss_betal
+
+    def BatchNormBackPass(self, G_batch, l, batch_size):
+        sigma_1 = np.array((self.batch_variances[l] + eps)**(-0.5))
+        sigma_2 = np.array((self.batch_variances[l] + eps)**(-1.5))
+        G_1 = G_batch*(sigma_1.dot(np.ones((1, batch_size))))
+        G_2 = G_batch*(sigma_2.dot(np.ones((1, batch_size))))
+        D = self.hidden_layers_batch[l] - np.array(self.batch_means[l]).dot(np.ones((1, batch_size)))
+        c = np.dot((G_2*D), np.ones(batch_size))
+        G_batch = G_1 - np.dot((np.dot(G_1, np.ones(batch_size))), np.ones((1, batch_size)))/batch_size - D*np.dot(c, np.ones((1, batch_size)))
+        return G_batch
+
+    def update_BM_params(self, gradients, weight, eta):
+        gradient_gammal, gradient_betal = gradients
+
+        gradient_gammal = np.reshape(gradient_gammal, (np.size(gradient_gammal), 1))
+        gradient_betal = np.reshape(gradient_betal, (np.size(gradient_betal), 1))
+        self.weights[weight] = self.weights[weight] - eta * gradient_gammal
+        self.biases[weight] = self.biases[weight] - eta * gradient_betal
 
     def MiniBatchGD(self, train_data, val_data, GDparams):
         batch_size, epochs = GDparams
 
-        #init information
+        # init information
         train_cost = []
         validation_cost = []
         train_loss = []
@@ -149,14 +231,15 @@ class ANN_multilayer:
             batchSize = 1
 
         for i in range(0, X.shape[1], batchSize):
-            #print(i)
+            # print(i)
             eta_t = self.updatedLearningRate()
             if self.checkIfTrainingShouldStop():
-                #print(self.t)
+                # print(self.t)
                 break
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
-            batchP = self.evaluate_classifier(batchX)
+            batchP = self.evaluate_classifier(batchX, training=True)
+            self.final_prob_batch.append(batchP)
 
             self.compute_gradients(batchX, batchY, batchP, batchSize, eta_t)
             self.t += 1
@@ -184,19 +267,20 @@ class ANN_multilayer:
 
     def updatedLearningRate(self):
         l = np.floor(self.t / (2 * self.step_size))
-        if 2*l*self.step_size <= self.t < (2 * l + 1)*self.step_size:
+        if 2 * l * self.step_size <= self.t < (2 * l + 1) * self.step_size:
             return self.evenIterationFunc(l, self.t)
         else:
             return self.unevenIterationFunc(l, self.t)
 
     def evenIterationFunc(self, l, t):
-        return self.eta_min + (t - 2*l*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
+        return self.eta_min + (t - 2 * l * self.step_size) / self.step_size * (self.eta_max - self.eta_min)
 
     def unevenIterationFunc(self, l, t):
-        return self.eta_max - (t - (2*l+1)*self.step_size)/self.step_size*(self.eta_max - self.eta_min)
+        return self.eta_max - (t - (2 * l + 1) * self.step_size) / self.step_size * (self.eta_max - self.eta_min)
 
     def checkIfTrainingShouldStop(self):
-        return self.n_cycles*2 == self.t/self.step_size
+        return self.n_cycles * 2 == self.t / self.step_size
+
 
 def load_batch(filename):
     dict = LoadBatch(filename)
@@ -240,7 +324,7 @@ def ComputeGradients(X, Y, neural_net, batch_size):
 
 def ComputeGradsNumSlow(X, Y, neuarl_net, h):
     """ Converted from matlab code """
-    #Note that W and B are arrays with the weights and biases for each layer kept seperatly
+    # Note that W and B are arrays with the weights and biases for each layer kept seperatly
     W = neural_net.w
     B = neural_net.b
     W_size = np.size(W)
@@ -270,9 +354,9 @@ def ComputeGradsNumSlow(X, Y, neuarl_net, h):
 
     for j in range(W_size):
         grad_W.append(np.zeros(np.shape(W[j])))
-        #print(np.size(W[j], axis=0))
+        # print(np.size(W[j], axis=0))
         for i in range(np.size(W[j], axis=0)):
-            #print(np.size(W[j], axis=1))
+            # print(np.size(W[j], axis=1))
             for k in range(np.size(W[j], axis=1)):
                 W_try = W
                 W_try[j][i][k] = W_try[j][i][k] - h
@@ -420,14 +504,14 @@ if __name__ == '__main__':
     input_size = np.size(processed_training_data[0], axis=0)
     layers = [input_size, 50, 50, output_size]
 
-    #lamda = 0.0010995835253050919
+    # lamda = 0.0010995835253050919
     lamda = 0.005
     eta_min = 0.00001
     eta_max = 0.1
     batch_size = 100
-    #step_size = 800
-    #step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
-    step_size = 5*45000/batch_size
+    # step_size = 800
+    # step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
+    step_size = 5 * 45000 / batch_size
 
     n_cycles = 2
     eta_params = eta_min, eta_max, step_size, n_cycles
@@ -440,10 +524,10 @@ if __name__ == '__main__':
     tdl = processed_training_data[1]
     vdi = processed_validation_data[0]
     vdl = processed_validation_data[1]
-    
+
     train_data = tdi, tdl
     val_data = vdi, vdl
-    #neural_net.MiniBatchGD(train_data, val_data, GDparams)
+    # neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
     '''#Lambda optimization
     ####################################################################
