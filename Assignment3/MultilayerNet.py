@@ -128,7 +128,7 @@ class ANN_multilayer:
         n_hidden_layers = self.n_layers - 2
         G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, n_hidden_layers-1, batch_size)
         for l in range(n_hidden_layers-1):
-
+            G_batch = self.update_batch_norm_params(G_batch, n_hidden_layers, eta, l, batch_size)
             G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, l, batch_size)
 
 
@@ -166,7 +166,7 @@ class ANN_multilayer:
         gradients = self.get_batch_gradient(G_batch, batch_size, l)
         G_batch = G_batch*(self.gammas[l].dot(np.ones((1, batch_size))))
         G_batch = self.BatchNormBackPass(G_batch, l, batch_size)
-        self.update_BM_params(gradients, weight, eta)
+        self.update_BM_params(gradients, n_hidden_layers - l, eta)
         return G_batch
 
     def get_batch_gradient(self, G_batch, batch_size, l):
