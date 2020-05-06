@@ -10,14 +10,16 @@ eps = sys.float_info.epsilon
 
 class ANN_multilayer:
 
-    def __init__(self, layers, lamda, eta_params):
+    def __init__(self, layers, lamda, eta_params, BN=False, alfa=0):
         '''The 'layers' parameter is an array of integers, each representing the size of a hidden layer.'''
 
         mu, sigma = 0, 0.01
         self.n_layers = len(layers)  # Including input and output layers
         self.layers = layers
+        self.BN = BN
 
         self.lamda = lamda
+        self.alfa = alfa
         self.inputs_batch = []
         self.hidden_layers_batch = []
         self.hidden_layers_mod_batch = []
@@ -28,20 +30,24 @@ class ANN_multilayer:
         # Batch Normalization
         self.batch_means = np.array(self.n_layers)
         self.batch_variances = np.array(self.n_layers)
+        self.batch_means_avg = np.array(self.n_layers)
+        self.batch_variances_avg = np.array(self.n_layers)
         self.gammas = []
         self.betas = []
 
         for i in range(self.n_layers - 1):
             self.weights.append(np.random.normal(mu, sigma, (layers[i + 1], layers[i])))
             self.biases.append(np.zeros((layers[i + 1], 1)))
-            self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
-            self.betas.append(np.zeros((layers[i + 1], 1)))
+            if BN:
+                self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
+                self.betas.append(np.zeros((layers[i + 1], 1)))
 
-        for i in range(self.n_layers-2):
-            self.inputs_batch.append(np.matrix((layers[i + 1], 1)))
-            self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
-            self.hidden_layers_mod_batch.append(np.matrix((layers[i + 1], 1)))
-            # self.networks_final_prob_batch.append(np.matrix((layers[i + 1], 1)))
+        if BN:
+            for i in range(self.n_layers-2):
+                self.inputs_batch.append(np.matrix((layers[i + 1], 1)))
+                self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
+                self.hidden_layers_mod_batch.append(np.matrix((layers[i + 1], 1)))
+                # self.networks_final_prob_batch.append(np.matrix((layers[i + 1], 1)))
 
         # Parameters related to cyclic learning rate:
         self.eta_min, self.eta_max, self.step_size, self.n_cycles = eta_params
@@ -54,21 +60,27 @@ class ANN_multilayer:
             hidden_index = i + 1
             self.inputs_batch[i] = S_l
             self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, hidden_index)
-            self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, training)
-            S_l = self.compute_scale_shift(S_l, hidden_index)
+
+            if self.BN:
+                self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, training)
+                S_l = self.compute_scale_shift(S_l, hidden_index)
+
             S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
         S_l = self.compute_hidden(S_l, self.n_layers - 1)
         P = softmax(S_l)
         return P
 
-    def batch_normalization(self, S_i, layer, training=False):
+    def batch_normalization(self, S_i, layer, training):
         if training:
             batch_mean_l, batch_variance_l = self.batch_prep(S_i)
             self.batch_means[layer] = batch_mean_l
             self.batch_variances[layer] = batch_variance_l
         else:
-            batch_mean_l = self.batch_means[layer]
-            batch_variance_l = self.batch_variances[layer]
+            '''batch_mean_l = self.batch_means[layer]
+            batch_variance_l = self.batch_variances[layer]'''
+
+            batch_mean_l = self.batch_means_avg[layer]
+            batch_variance_l = self.batch_variances_avg[layer]
         return (S_i - batch_mean_l) / np.sqrt(batch_variance_l + eps)
 
     def batch_prep(self, S_i):
@@ -110,7 +122,7 @@ class ANN_multilayer:
         return -np.log10(np.dot(np.array(y), p))
 
     def compute_accuracy(self, X, y):
-        P = self.evaluate_classifier(X)
+        P = self.evaluate_classifier(X, self.BN)
         correct_answers = 0
         assert np.size(P, axis=1) == np.size(X, axis=1)
         assert np.size(P, axis=1) == np.size(y)
@@ -128,7 +140,8 @@ class ANN_multilayer:
         n_hidden_layers = self.n_layers - 2
         G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, n_hidden_layers-1, batch_size)
         for l in range(n_hidden_layers-1):
-            G_batch = self.update_batch_norm_params(G_batch, n_hidden_layers, eta, l, batch_size)
+            if self.BN:
+                G_batch = self.update_batch_norm_params(G_batch, n_hidden_layers, eta, l+1, batch_size)
             G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, l, batch_size)
 
 
@@ -162,7 +175,7 @@ class ANN_multilayer:
         self.update_weights(gradients, n_hidden_layers - l, eta)
         return G_batch
 
-    def update_batch_norm_params(self, G_batch, n_hidden_layers, eta, l, batch_size, weight):
+    def update_batch_norm_params(self, G_batch, n_hidden_layers, eta, l, batch_size):
         gradients = self.get_batch_gradient(G_batch, batch_size, l)
         G_batch = G_batch*(self.gammas[l].dot(np.ones((1, batch_size))))
         G_batch = self.BatchNormBackPass(G_batch, l, batch_size)
@@ -205,12 +218,20 @@ class ANN_multilayer:
         X_val, Y_val = val_data
 
         for i in range(epochs):
-            cost, loss = self.fit(X, Y, X_val, Y_val, batch_size)
+            self.fit(X, Y, batch_size)
 
-            train_cost = np.concatenate((train_cost, cost[0]))
+            t_cost, t_loss = self.compute_cost_and_loss(X, Y)
+            val_cost, val_loss = self.compute_cost_and_loss(X_val, Y_val)
+
+            train_cost.append(t_cost)
+            validation_cost.append(val_cost)
+            train_loss.append(t_loss)
+            validation_loss.append(val_loss)
+
+            '''train_cost = np.concatenate((train_cost, cost[0]))
             validation_cost = np.concatenate((validation_cost, cost[1]))
             train_loss = np.concatenate((train_loss, loss[0]))
-            validation_loss = np.concatenate((validation_loss, loss[1]))
+            validation_loss = np.concatenate((validation_loss, loss[1]))'''
             if self.checkIfTrainingShouldStop():
                 break
 
@@ -219,13 +240,13 @@ class ANN_multilayer:
 
         return cost, loss
 
-    def fit(self, X, Y, X_val, Y_val, batchSize=-1):
+    def fit(self, X, Y, batchSize=-1):
 
         # init information
-        train_cost = []
-        val_cost = []
-        train_loss = []
-        val_loss = []
+        #train_cost = []
+        #val_cost = []
+        #train_loss = []
+        #val_loss = []
 
         if (batchSize == -1):
             batchSize = 1
@@ -239,7 +260,13 @@ class ANN_multilayer:
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX, training=True)
-            self.final_prob_batch.append(batchP)
+
+            if self.BN:
+                self.final_prob_batch.append(batchP)
+                if i is 0:
+                    self.init_batch_avgs()
+                else:
+                    self.update_batch_avgs()
 
             self.compute_gradients(batchX, batchY, batchP, batchSize, eta_t)
             self.t += 1
@@ -253,8 +280,8 @@ class ANN_multilayer:
                 train_loss.append(tl)
                 val_loss.append(vl)'''
 
-        cost = [train_cost, val_cost]
-        loss = [train_loss, val_loss]
+        #cost = [train_cost, val_cost]
+        #loss = [train_loss, val_loss]
 
         return cost, loss
 
@@ -281,6 +308,13 @@ class ANN_multilayer:
     def checkIfTrainingShouldStop(self):
         return self.n_cycles * 2 == self.t / self.step_size
 
+    def init_batch_avgs(self):
+        self.batch_means_avg = self.batch_means
+        self.batch_variances = self.batch_variances
+
+    def update_batch_avgs(self):
+        self.batch_means_avg = self.alfa*self.batch_means_avg + (1-self.alfa)*self.batch_means_avg
+        self.batch_variances_avg = self.alfa*self.batch_variances_avg + (1-self.alfa)*self.batch_variances_avg
 
 def load_batch(filename):
     dict = LoadBatch(filename)
@@ -325,8 +359,8 @@ def ComputeGradients(X, Y, neural_net, batch_size):
 def ComputeGradsNumSlow(X, Y, neuarl_net, h):
     """ Converted from matlab code """
     # Note that W and B are arrays with the weights and biases for each layer kept seperatly
-    W = neural_net.w
-    B = neural_net.b
+    W = neural_net.weights
+    B = neural_net.biases
     W_size = np.size(W)
     B_size = np.size(B)
 
@@ -504,6 +538,7 @@ if __name__ == '__main__':
     input_size = np.size(processed_training_data[0], axis=0)
     layers = [input_size, 50, 50, output_size]
 
+    BN = False
     # lamda = 0.0010995835253050919
     lamda = 0.005
     eta_min = 0.00001
@@ -515,7 +550,7 @@ if __name__ == '__main__':
 
     n_cycles = 2
     eta_params = eta_min, eta_max, step_size, n_cycles
-    neural_net = ANN_multilayer(layers, lamda, eta_params)
+    neural_net = ANN_multilayer(layers, lamda, eta_params, BN=BN)
 
     epochs = 1000
     GDparams = batch_size, epochs
@@ -584,13 +619,14 @@ if __name__ == '__main__':
     ############################################################################'''
 
     cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
-    '''train_cost, validation_cost = cost
+    train_cost, validation_cost = cost
     train_loss, validation_loss = loss
     plot_cost(np.array(train_cost), validation_cost)
     plot_total_loss(np.array(train_loss), validation_loss)
 
+    '''
     print("Time steps performed: ", neural_net.t)
-    print("Train Cost length: ", np.size(train_cost))
+    print("Train Cost length: ", np.size(train_cost))'''
 
     #train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])'''
 
