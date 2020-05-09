@@ -39,12 +39,13 @@ class ANN_multilayer:
                 self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
                 self.betas.append(np.zeros((layers[i + 1], 1)))
 
-        if BN:
-            for i in range(self.n_layers-2):
+        for i in range(self.n_layers-2):
+            self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
+            if BN:
                 self.inputs_batch.append(np.matrix((layers[i + 1], 1)))
-                self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
                 self.hidden_layers_mod_batch.append(np.matrix((layers[i + 1], 1)))
                 # self.networks_final_prob_batch.append(np.matrix((layers[i + 1], 1)))
+
 
         # Parameters related to cyclic learning rate:
         self.eta_min, self.eta_max, self.step_size, self.n_cycles = eta_params
@@ -52,14 +53,15 @@ class ANN_multilayer:
 
     def evaluate_classifier(self, X, training=False):
         S_l = X
-        hidden_layer = 0
         for i in range(self.n_layers - 2):
             hidden_index = i + 1
-            self.inputs_batch[i] = S_l
+            if self.BN:
+                self.inputs_batch[i] = S_l
+
             self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, hidden_index)
 
             if self.BN:
-                self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, hidden_index, training)
+                self.hidden_layers_mod_batch[i] = S_l = self.batch_normalization(S_l, hidden_index, training)
                 S_l = self.compute_scale_shift(S_l, hidden_index)
 
             S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
@@ -139,11 +141,11 @@ class ANN_multilayer:
         G_batch = self.init_G_batch(Y_batch, P_batch)
 
         n_hidden_layers = self.n_layers - 2
-        G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, n_hidden_layers-1, batch_size)
+        G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, 0, batch_size)
         for l in range(n_hidden_layers-1):
             if self.BN:
                 G_batch = self.update_batch_norm_params(G_batch, n_hidden_layers, eta, l+1, batch_size)
-            G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, l, batch_size)
+            G_batch = self.update_network_params(G_batch, n_hidden_layers, eta, l+1, batch_size)
 
 
         dloss_W1, dloss_b1 = self.get_weight_gradient(X_batch, G_batch, batch_size)
@@ -207,6 +209,7 @@ class ANN_multilayer:
         self.biases[weight] = self.biases[weight] - eta * gradient_betal
 
     def MiniBatchGD(self, train_data, val_data, GDparams):
+        # TODO Random shuffle of train data after each epoch
         batch_size, epochs = GDparams
 
         # init information
@@ -253,7 +256,7 @@ class ANN_multilayer:
             batchP = self.evaluate_classifier(batchX, training=True)
 
             if self.BN:
-                self.final_prob_batch.append(batchP)
+                #self.final_prob_batch.append(batchP)
                 if i is 0:
                     self.init_batch_avgs()
                 else:

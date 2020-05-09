@@ -69,7 +69,7 @@ def pre_process_all_data(training_data, validation_data, test_data):
 def generate_neural_net(proc_train):
     output_size = np.size(proc_train[1], axis=0)
     input_size = np.size(proc_train[0], axis=0)
-    layers = [input_size, 50, 50, output_size]
+    layers = [input_size, 50, output_size]
 
     return ANN_multilayer(layers, lamda, eta_params, BN=BN), layers
 
@@ -86,7 +86,7 @@ def setup_train_data(proc_train, proc_val):
     return train_data, val_data
 
 
-def train_network():
+def train_network(train_data, val_data):
     return neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
 
@@ -167,8 +167,10 @@ def grad_checks(proc_train, neural_net):
 if __name__ == '__main__':
     train_data, val_data, test_data = load_training_data()
     proc_train, proc_val, proc_test = pre_process_all_data(train_data, val_data, test_data)
+    train_input_output, val_input_output = setup_train_data(proc_train, proc_val)
     neural_net, layers = generate_neural_net(proc_train)
-    lamda_optimization(proc_train, proc_val, layers, eta_params, GDparams)
-    cost, loss = train_network()
-    plot_cost_and_lost(cost, loss)
+    #lamda_optimization(proc_train, proc_val, layers, eta_params, GDparams)
+    cost, loss = train_network(train_input_output, val_input_output)
+    #plot_cost_and_lost(cost, loss)
     print_net_performance(neural_net, proc_train, proc_val, proc_test)
+    #grad_checks(proc_train, neural_net)
