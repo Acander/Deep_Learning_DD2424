@@ -59,7 +59,7 @@ class ANN_multilayer:
             self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, hidden_index)
 
             if self.BN:
-                self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, training)
+                self.hidden_layers_batch[i] = S_l = self.batch_normalization(S_l, hidden_index, training)
                 S_l = self.compute_scale_shift(S_l, hidden_index)
 
             S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
@@ -108,8 +108,11 @@ class ANN_multilayer:
         for i in range(np.size(Y, axis=1)):
             sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
 
-        penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
-        #penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
+        weight_and_sum_score = 0
+        for weight in self.weights:
+            weight_and_sum_score += (np.sum(np.square(weight)))
+
+        penalty_term = self.lamda * weight_and_sum_score
         cost = norm_factor * sum_entropy + penalty_term
         loss = norm_factor * sum_entropy
         return cost, loss
