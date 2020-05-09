@@ -1,6 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import sys
+import sklearn
 from Assignment1.functions import softmax
 
 eps = sys.float_info.epsilon
@@ -222,6 +222,7 @@ class ANN_multilayer:
         X_val, Y_val = val_data
 
         for i in range(epochs):
+            X, Y = self.shuffle_data(X, Y)
             self.fit(X, Y, batch_size)
 
             t_cost, t_loss = self.compute_cost_and_loss(X, Y)
@@ -239,6 +240,10 @@ class ANN_multilayer:
         loss = train_loss, validation_loss
 
         return cost, loss
+
+    def shuffle_data(self, X, Y):
+        X, Y = sklearn.utils.shuffle(X.transpose(), Y.transpose())
+        return X.transpose(), Y.transpose()
 
     def fit(self, X, Y, batchSize=-1):
 

@@ -69,7 +69,7 @@ def pre_process_all_data(training_data, validation_data, test_data):
 def generate_neural_net(proc_train):
     output_size = np.size(proc_train[1], axis=0)
     input_size = np.size(proc_train[0], axis=0)
-    layers = [input_size, 50, output_size]
+    layers = [input_size, 50, 50, output_size]
 
     return ANN_multilayer(layers, lamda, eta_params, BN=BN), layers
 
