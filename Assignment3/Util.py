@@ -1,9 +1,8 @@
-from Assignment1.functions import softmax
 from Assignment1.functions import LoadBatch
 from Assignment1.functions import montage
+import Assignment3.ANN_multilayer
 import numpy as np
 import matplotlib.pyplot as plt
-import sys
 
 def load_batch(filename):
     dict = LoadBatch(filename)

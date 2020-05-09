@@ -1,3 +1,23 @@
+import numpy as np
+from Assignment3.Util import load_batch, pre_process, plot_total_loss, plot_cost
+from Assignment3.Util import print_gradient_check, printOutGradients, ComputeGradients
+from Assignment3.ANN_multilayer import ANN_multilayer
+
+BN = False
+# lamda = 0.0010995835253050919
+lamda = 0.005
+eta_min = 0.00001
+eta_max = 0.1
+batch_size = 100
+epochs = 100
+# step_size = 800
+# step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
+step_size = 5 * 45000 / batch_size
+n_cycles = 2
+eta_params = eta_min, eta_max, step_size, n_cycles
+GDparams = epochs, batch_size
+
+
 def load_training_data():
     [X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
     [X_train_2, Y_train_2, y_train_2] = load_batch('data_batch_2')
@@ -51,20 +71,7 @@ def generate_neural_net(proc_train):
     input_size = np.size(proc_train[0], axis=0)
     layers = [input_size, 50, 50, output_size]
 
-    BN = False
-    # lamda = 0.0010995835253050919
-    lamda = 0.005
-    eta_min = 0.00001
-    eta_max = 0.1
-    batch_size = 100
-    # step_size = 800
-    # step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
-    step_size = 5 * 45000 / batch_size
-
-    n_cycles = 2
-    eta_params = eta_min, eta_max, step_size, n_cycles
-    neural_net = ANN_multilayer(layers, lamda, eta_params, BN=BN)
-    return neural_net, batch_size
+    return ANN_multilayer(layers, lamda, eta_params, BN=BN), layers
 
 
 def setup_train_data(proc_train, proc_val):
@@ -79,11 +86,8 @@ def setup_train_data(proc_train, proc_val):
     return train_data, val_data
 
 
-def train_network(batch_size):
-    epochs = 1000
-    GDparams = batch_size, epochs
-
-    # neural_net.MiniBatchGD(train_data, val_data, GDparams)
+def train_network():
+    return neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
 
 def lamda_optimization(train_data, val_data, layers, eta_params, GDparams):
@@ -128,29 +132,13 @@ def lamda_optimization(train_data, val_data, layers, eta_params, GDparams):
 
     return lamdas[best_lamda]
 
-
-if __name__ == '__main__':
-    training_data, validation_data, test_data = load_training_data()
-    proc_train, proc_val, proc_test = pre_process_all_data(training_data, validation_data, test_data)
-    neural_net, batch_size = generate_neural_net(proc_train)
-    lamda_optimization()
-    train_network(batch_size)
-
-
-    def lamda_optimization(train_data, val_data, layers, eta_params, GDparams
-
-        cost, loss = neural_net.MiniBatchGD(train_data, val_data, GDparams)
-
-
+def plot_cost_and_lost(cost, loss):
     train_cost, validation_cost = cost
     train_loss, validation_loss = loss
     plot_cost(np.array(train_cost), validation_cost)
     plot_total_loss(np.array(train_loss), validation_loss)
 
-    '''
-    print("Time steps performed: ", neural_net.t)
-    print("Train Cost length: ", np.size(train_cost))'''
-
+def print_net_performance(neural_net, proc_train, proc_val, proc_test):
     # train_cost, train_loss = neural_net.compute_cost_and_loss(processed_training_data[0], processed_training_data[1])'''
 
     '''print("-----------------------------")
@@ -165,7 +153,8 @@ if __name__ == '__main__':
           neural_net.compute_accuracy(proc_val[0], proc_val[2]))
     print("Final test accuracy: ", neural_net.compute_accuracy(proc_test[0], proc_test[2]))
 
-    '''grad_analytically, grad_numerically = ComputeGradients(processed_training_data[0], processed_training_data[1], neural_net,
+def grad_checks(proc_train, neural_net):
+    grad_analytically, grad_numerically = ComputeGradients(proc_train[0], proc_train[1], neural_net,
                                                            batch_size)
     printOutGradients(grad_analytically, grad_numerically)
 
@@ -173,4 +162,13 @@ if __name__ == '__main__':
     [grad_W, grad_b] = grad_analytically
     [grad_Wn, grad_bn] = grad_numerically
 
-    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)'''
+    print_gradient_check(grad_W, grad_Wn, grad_b, grad_bn, eps)
+
+if __name__ == '__main__':
+    train_data, val_data, test_data = load_training_data()
+    proc_train, proc_val, proc_test = pre_process_all_data(train_data, val_data, test_data)
+    neural_net, layers = generate_neural_net(proc_train)
+    lamda_optimization(proc_train, proc_val, layers, eta_params, GDparams)
+    cost, loss = train_network()
+    plot_cost_and_lost(cost, loss)
+    print_net_performance(neural_net, proc_train, proc_val, proc_test)

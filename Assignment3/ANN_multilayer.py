@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
+from Assignment1.functions import softmax
 
 eps = sys.float_info.epsilon
 
@@ -108,6 +109,7 @@ class ANN_multilayer:
             sum_entropy += self.cross_entropy(P[:, i], Y[:, i])
 
         penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
+        #penalty_term = self.lamda * (np.sum(np.square(self.w[0])) + np.sum(np.square(self.w[1])))
         cost = norm_factor * sum_entropy + penalty_term
         loss = norm_factor * sum_entropy
         return cost, loss
@@ -224,10 +226,6 @@ class ANN_multilayer:
             train_loss.append(t_loss)
             validation_loss.append(val_loss)
 
-            '''train_cost = np.concatenate((train_cost, cost[0]))
-            validation_cost = np.concatenate((validation_cost, cost[1]))
-            train_loss = np.concatenate((train_loss, loss[0]))
-            validation_loss = np.concatenate((validation_loss, loss[1]))'''
             if self.checkIfTrainingShouldStop():
                 break
 
@@ -237,12 +235,6 @@ class ANN_multilayer:
         return cost, loss
 
     def fit(self, X, Y, batchSize=-1):
-
-        # init information
-        #train_cost = []
-        #val_cost = []
-        #train_loss = []
-        #val_loss = []
 
         if (batchSize == -1):
             batchSize = 1
@@ -267,19 +259,6 @@ class ANN_multilayer:
             self.compute_gradients(batchX, batchY, batchP, batchSize, eta_t)
             self.t += 1
 
-            '''if i % 1000 == 0:
-                #print("Compute cost and loss")
-                tc, tl = self.compute_cost_and_loss(X, Y)
-                vc, vl = self.compute_cost_and_loss(X_val, Y_val)
-                train_cost.append(tc)
-                val_cost.append(vc)
-                train_loss.append(tl)
-                val_loss.append(vl)'''
-
-        #cost = [train_cost, val_cost]
-        #loss = [train_loss, val_loss]
-
-        return cost, loss
 
     def update_weights(self, gradients, weight, eta):
         gradient_Wl, gradient_bl = gradients
