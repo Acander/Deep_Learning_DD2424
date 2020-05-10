@@ -4,6 +4,7 @@ from Assignment3.Util import print_gradient_check, printOutGradients, ComputeGra
 from Assignment3.ANN_multilayer import ANN_multilayer
 
 BN = True
+alfa = 0.9
 # lamda = 0.0010995835253050919
 lamda = 0.005
 eta_min = 0.00001
@@ -71,7 +72,7 @@ def generate_neural_net(proc_train):
     input_size = np.size(proc_train[0], axis=0)
     layers = [input_size, 50, 50, output_size]
 
-    return ANN_multilayer(layers, lamda, eta_params, BN=BN), layers
+    return ANN_multilayer(layers, lamda, eta_params, BN=BN, alfa=alfa), layers
 
 
 def setup_train_data(proc_train, proc_val):

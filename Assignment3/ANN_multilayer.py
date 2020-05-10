@@ -76,6 +76,7 @@ class ANN_multilayer:
             S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
         S_l = self.compute_hidden(S_l, self.n_layers - 1)
         P = softmax(S_l)
+        #print(P)
         return P
 
     def batch_normalization(self, S_i, layer, training):
@@ -84,19 +85,18 @@ class ANN_multilayer:
             self.batch_means[layer] = batch_mean_l
             self.batch_variances[layer] = batch_variance_l
         else:
-            '''batch_mean_l = self.batch_means[layer]
-            batch_variance_l = self.batch_variances[layer]'''
-            # TODO Use exponential moving averages here!!!!
             batch_mean_l = self.batch_means_avg[layer]
             batch_variance_l = self.batch_variances_avg[layer]
-        S_i = (S_i.transpose() - batch_mean_l) / np.sqrt(batch_variance_l + eps)
-        return S_i.transpose()
+        #print(np.linalg.inv(np.sqrt(np.diagflat(batch_variance_l + eps))))
+        #print(S_i - batch_mean_l.reshape((len(batch_mean_l), 1)))
+        S_i = (np.linalg.inv(np.sqrt(np.diagflat(batch_variance_l + eps)))).dot(S_i - batch_mean_l.reshape((len(batch_mean_l), 1)))
+        return S_i
 
     def batch_prep(self, S_i):
         batch_size = np.size(S_i, axis=1)
         batch_mean = np.sum(S_i, axis=1) / batch_size  # 13
 
-        batch_variance = np.sum(np.subtract(S_i.transpose(), batch_mean) ** 2) # 14
+        batch_variance = np.sum(np.subtract(S_i.transpose(), batch_mean) ** 2, axis=0) / batch_size # 14
         return batch_mean, batch_variance
 
     def compute_hidden(self, X, layer):
@@ -104,7 +104,7 @@ class ANN_multilayer:
         return S_l
 
     def compute_scale_shift(self, S_l, layer):
-        S_l = self.gammas[layer - 1] * S_l + self.biases[layer - 1]
+        S_l = np.diag(self.gammas[layer - 1])* S_l + self.betas[layer - 1]
         return S_l
 
     def compute_cost_and_loss(self, X, Y):
@@ -132,7 +132,8 @@ class ANN_multilayer:
         return -np.log10(np.dot(np.array(y), p))
 
     def compute_accuracy(self, X, y):
-        P = self.evaluate_classifier(X, self.BN)
+        P = self.evaluate_classifier(X)
+        print(P[:, 0])
         correct_answers = 0
         assert np.size(P, axis=1) == np.size(X, axis=1)
         assert np.size(P, axis=1) == np.size(y)
@@ -200,6 +201,8 @@ class ANN_multilayer:
     def BatchNormBackPass(self, G_batch, l, batch_size):
         sigma_1 = np.array((self.batch_variances[l] + eps)**(-0.5)) # 31
         sigma_2 = np.array((self.batch_variances[l] + eps)**(-1.5)) # 32
+        sigma_1 = sigma_1.reshape((len(sigma_1), 1))
+        sigma_2 = sigma_2.reshape((len(sigma_2), 1))
         G_1 = G_batch*(sigma_1.dot(np.ones((1, batch_size)))) # 33
         G_2 = G_batch*(sigma_2.dot(np.ones((1, batch_size)))) # 34
         D = self.hidden_layers_batch[l] - np.array(self.batch_means[l]).reshape((self.batch_means[l].size, 1)).dot(np.ones((1, batch_size))) # 35
@@ -208,7 +211,7 @@ class ANN_multilayer:
         dot_1 = np.dot(G_1, np.ones(batch_size))
         reshape_dot_1 = dot_1.reshape((len(dot_1), 1))
         term_1 = np.dot(reshape_dot_1, np.ones((1, batch_size)))/batch_size
-        G_batch = G_1 - term_1 - D*np.dot(c.reshape((len(c), 1)), np.ones((1, batch_size)))
+        G_batch = G_1 - term_1 - D*np.dot(c.reshape((len(c), 1)), np.ones((1, batch_size)))/batch_size
         return G_batch
 
     def update_BM_params(self, gradients, weight, eta):
@@ -216,8 +219,8 @@ class ANN_multilayer:
 
         gradient_gammal = np.reshape(gradient_gammal, (np.size(gradient_gammal), 1))
         gradient_betal = np.reshape(gradient_betal, (np.size(gradient_betal), 1))
-        self.weights[weight] = self.weights[weight] - eta * gradient_gammal
-        self.biases[weight] = self.biases[weight] - eta * gradient_betal
+        self.gammas[weight] = self.gammas[weight] - eta * gradient_gammal
+        self.betas[weight] = self.betas[weight] - eta * gradient_betal
 
     def MiniBatchGD(self, train_data, val_data, GDparams):
         # TODO Random shuffle of train data after each epoch
@@ -268,7 +271,6 @@ class ANN_multilayer:
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
             batchP = self.evaluate_classifier(batchX, training=True)
-
             if self.BN:
                 #self.final_prob_batch.append(batchP)
                 if i is 0:
@@ -304,8 +306,9 @@ class ANN_multilayer:
 
     def init_batch_avgs(self):
         self.batch_means_avg = self.batch_means
-        self.batch_variances = self.batch_variances
+        self.batch_variances_avg = self.batch_variances
 
     def update_batch_avgs(self):
-        self.batch_means_avg = self.alfa*self.batch_means_avg + (1-self.alfa)*self.batch_means_avg
-        self.batch_variances_avg = self.alfa*self.batch_variances_avg + (1-self.alfa)*self.batch_variances_avg
+        for i in range(len(self.batch_means)):
+            self.batch_means_avg[i] = self.alfa*self.batch_means_avg[i] + (1-self.alfa)*self.batch_means[i]
+            self.batch_variances_avg[i] = self.alfa*self.batch_variances_avg[i] + (1-self.alfa)*self.batch_variances[i]
