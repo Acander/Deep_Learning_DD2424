@@ -3,14 +3,14 @@ from Assignment3.Util import load_batch, pre_process, plot_total_loss, plot_cost
 from Assignment3.Util import print_gradient_check, printOutGradients, ComputeGradients
 from Assignment3.ANN_multilayer import ANN_multilayer
 
-BN = False
+BN = True
 # lamda = 0.0010995835253050919
 lamda = 0.005
 eta_min = 0.00001
 eta_max = 0.1
 batch_size = 100
 epochs = 100
-# step_size = 800
+#step_size = 800
 # step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
 step_size = 5 * 45000 / batch_size
 n_cycles = 2
@@ -25,13 +25,13 @@ def load_training_data():
     [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
     [X_train_5, Y_train_5, y_train_5] = load_batch('data_batch_5')
 
-    '''X_train_5, X_val = np.split(X_train_5, 2, axis=1)
+    X_train_5, X_val = np.split(X_train_5, 2, axis=1)
     Y_train_5, Y_val = np.split(Y_train_5, 2, axis=1)
-    y_train_5, y_val = np.split(y_train_5, 2)'''
+    y_train_5, y_val = np.split(y_train_5, 2)
 
-    [X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
+    '''[X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
     [Y_train_5, Y_val] = np.split(Y_train_5, [9000], axis=1)
-    [y_train_5, y_val] = np.split(y_train_5, [9000])
+    [y_train_5, y_val] = np.split(y_train_5, [9000])'''
 
     X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)

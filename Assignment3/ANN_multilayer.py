@@ -12,6 +12,7 @@ class ANN_multilayer:
 
         mu, sigma = 0, 0.01
         self.n_layers = len(layers)  # Including input and output layers
+        print("n_layers: ", self.n_layers)
         self.layers = layers
         self.BN = BN
 
@@ -25,10 +26,14 @@ class ANN_multilayer:
         self.biases = []
 
         # Batch Normalization
-        self.batch_means = np.array(self.n_layers)
+        '''self.batch_means = np.array(self.n_layers)
         self.batch_variances = np.array(self.n_layers)
         self.batch_means_avg = np.array(self.n_layers)
-        self.batch_variances_avg = np.array(self.n_layers)
+        self.batch_variances_avg = np.array(self.n_layers)'''
+        self.batch_means = []
+        self.batch_variances = []
+        self.batch_means_avg = []
+        self.batch_variances_avg = []
         self.gammas = []
         self.betas = []
 
@@ -38,6 +43,10 @@ class ANN_multilayer:
             if BN:
                 self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
                 self.betas.append(np.zeros((layers[i + 1], 1)))
+                self.batch_means.append(np.array(layers[i+1]))
+                self.batch_variances.append(np.array(layers[i+1]))
+                self.batch_means_avg.append(np.array(layers[i+1]))
+                self.batch_variances_avg.append(np.array(layers[i+1]))
 
         for i in range(self.n_layers-2):
             self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
@@ -77,26 +86,24 @@ class ANN_multilayer:
         else:
             '''batch_mean_l = self.batch_means[layer]
             batch_variance_l = self.batch_variances[layer]'''
-
+            # TODO Use exponential moving averages here!!!!
             batch_mean_l = self.batch_means_avg[layer]
             batch_variance_l = self.batch_variances_avg[layer]
-        return (S_i - batch_mean_l) / np.sqrt(batch_variance_l + eps)
+        S_i = (S_i.transpose() - batch_mean_l) / np.sqrt(batch_variance_l + eps)
+        return S_i.transpose()
 
     def batch_prep(self, S_i):
         batch_size = np.size(S_i, axis=1)
         batch_mean = np.sum(S_i, axis=1) / batch_size  # 13
-        print(np.shape(S_i))
-        print(np.shape(batch_mean))
-        batch_variance = np.sum((S_i - batch_mean) ** 2) # 14
+
+        batch_variance = np.sum(np.subtract(S_i.transpose(), batch_mean) ** 2) # 14
         return batch_mean, batch_variance
 
     def compute_hidden(self, X, layer):
-        # sum_matrix = np.ones((1, np.size(X, axis=1)))
         S_l = self.weights[layer - 1].dot(X) + self.biases[layer - 1]
         return S_l
 
     def compute_scale_shift(self, S_l, layer):
-        # sum_matrix = np.ones((1, np.size(S_l, axis=1)))
         S_l = self.gammas[layer - 1] * S_l + self.biases[layer - 1]
         return S_l
 
@@ -191,13 +198,17 @@ class ANN_multilayer:
         return dloss_gammal, dloss_betal
 
     def BatchNormBackPass(self, G_batch, l, batch_size):
-        sigma_1 = np.array((self.batch_variances[l] + eps)**(-0.5))
-        sigma_2 = np.array((self.batch_variances[l] + eps)**(-1.5))
-        G_1 = G_batch*(sigma_1.dot(np.ones((1, batch_size))))
-        G_2 = G_batch*(sigma_2.dot(np.ones((1, batch_size))))
-        D = self.hidden_layers_batch[l] - np.array(self.batch_means[l]).dot(np.ones((1, batch_size)))
-        c = np.dot((G_2*D), np.ones(batch_size))
-        G_batch = G_1 - np.dot((np.dot(G_1, np.ones(batch_size))), np.ones((1, batch_size)))/batch_size - D*np.dot(c, np.ones((1, batch_size)))
+        sigma_1 = np.array((self.batch_variances[l] + eps)**(-0.5)) # 31
+        sigma_2 = np.array((self.batch_variances[l] + eps)**(-1.5)) # 32
+        G_1 = G_batch*(sigma_1.dot(np.ones((1, batch_size)))) # 33
+        G_2 = G_batch*(sigma_2.dot(np.ones((1, batch_size)))) # 34
+        D = self.hidden_layers_batch[l] - np.array(self.batch_means[l]).reshape((self.batch_means[l].size, 1)).dot(np.ones((1, batch_size))) # 35
+        c = np.dot((G_2*D), np.ones(batch_size)) # 36
+
+        dot_1 = np.dot(G_1, np.ones(batch_size))
+        reshape_dot_1 = dot_1.reshape((len(dot_1), 1))
+        term_1 = np.dot(reshape_dot_1, np.ones((1, batch_size)))/batch_size
+        G_batch = G_1 - term_1 - D*np.dot(c.reshape((len(c), 1)), np.ones((1, batch_size)))
         return G_batch
 
     def update_BM_params(self, gradients, weight, eta):
@@ -251,10 +262,8 @@ class ANN_multilayer:
             batchSize = 1
 
         for i in range(0, X.shape[1], batchSize):
-            # print(i)
             eta_t = self.updatedLearningRate()
             if self.checkIfTrainingShouldStop():
-                # print(self.t)
                 break
             batchX = X[:, i:i + batchSize]
             batchY = Y[:, i:i + batchSize]
@@ -264,8 +273,7 @@ class ANN_multilayer:
                 #self.final_prob_batch.append(batchP)
                 if i is 0:
                     self.init_batch_avgs()
-                else:
-                    self.update_batch_avgs()
+                self.update_batch_avgs()
 
             self.compute_gradients(batchX, batchY, batchP, batchSize, eta_t)
             self.t += 1
