@@ -8,15 +8,16 @@ eps = sys.float_info.epsilon
 
 BN = True
 alfa = 0.9
-# lamda = 0.0010995835253050919
-lamda = 0.005
+#lamda = 0.012420743449115342
+# 1 lamda = 0.010420743449115342
+lamda = 0.003020743449115342
 eta_min = 0.00001
 eta_max = 0.1
 batch_size = 100
 epochs = 100
 #step_size = 800
 # step_size = 2 * np.floor(np.size(processed_training_data[0], axis=1) / batch_size)
-step_size = 5 * 45000 / batch_size
+step_size = 5 * 49000 / batch_size
 n_cycles = 2
 eta_params = eta_min, eta_max, step_size, n_cycles
 GDparams = epochs, batch_size
@@ -29,13 +30,13 @@ def load_training_data():
     [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
     [X_train_5, Y_train_5, y_train_5] = load_batch('data_batch_5')
 
-    X_train_5, X_val = np.split(X_train_5, 2, axis=1)
+    '''X_train_5, X_val = np.split(X_train_5, 2, axis=1)
     Y_train_5, Y_val = np.split(Y_train_5, 2, axis=1)
-    y_train_5, y_val = np.split(y_train_5, 2)
+    y_train_5, y_val = np.split(y_train_5, 2)'''
 
-    '''[X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
+    [X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
     [Y_train_5, Y_val] = np.split(Y_train_5, [9000], axis=1)
-    [y_train_5, y_val] = np.split(y_train_5, [9000])'''
+    [y_train_5, y_val] = np.split(y_train_5, [9000])
 
     X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)
@@ -102,7 +103,7 @@ def lamda_optimization(train_data, val_data, proc_train, proc_val, layers, eta_p
     l_min = -5
     l_max = -1
     #lamdas_course = [1.10713074e-03, 2.43313844e-05, 7.50698134e-02, 2.67369941e-04, 1.12718786e-03]
-    lamdas_course = np.random.uniform(10**(l_min), 10**(l_max), 10)
+    lamdas_course = np.random.uniform(10**(l_min), 10**(l_max), iterations_c)
     step_size = 2 * np.floor(np.size(proc_train[0], axis=1) / batch_size)
 
     print("COURSE SEARCH")
@@ -127,7 +128,7 @@ def lamda_optimization(train_data, val_data, proc_train, proc_val, layers, eta_p
     print("FINE SEARCH")
     for i in range(iterations_c, iterations_c + iterations):
         print("Iteration: ", i)
-        neural_net = ANN_multilayer(layers, lamdas[i], eta_params)
+        neural_net = ANN_multilayer(layers, lamdas[i], eta_params, BN=BN, alfa=alfa)
         neural_net.MiniBatchGD(train_data, val_data, GDparams)
         val_accuracy = neural_net.compute_accuracy(proc_val[0], proc_val[2])
         if val_accuracy > high_val_acc:
@@ -175,7 +176,7 @@ if __name__ == '__main__':
     proc_train, proc_val, proc_test = pre_process_all_data(train_data, val_data, test_data)
     train_input_output, val_input_output = setup_train_data(proc_train, proc_val)
     neural_net, layers = generate_neural_net(proc_train)
-    lamda_optimization(train_input_output, val_input_output, proc_train, proc_val, layers, eta_params, GDparams)
+    #lamda = lamda_optimization(train_input_output, val_input_output, proc_train, proc_val, layers, eta_params, GDparams)
     cost, loss = train_network(train_input_output, val_input_output)
     plot_cost_and_lost(cost, loss)
     print_net_performance(neural_net, proc_train, proc_val, proc_test)

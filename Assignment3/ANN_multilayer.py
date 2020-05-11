@@ -36,6 +36,7 @@ class ANN_multilayer:
         for i in range(self.n_layers - 1):
             #self.weights.append(np.random.normal(mu, sigma, (layers[i + 1], layers[i]))) # Xavier init
             self.weights.append(np.random.normal(0, 1/np.sqrt(layers[i]), (layers[i + 1], layers[i]))) # He init
+            #self.weights.append(np.random.normal(0, 1e-4, (layers[i + 1], layers[i])))
             self.biases.append(np.zeros((layers[i + 1], 1)))
 
         for i in range(self.n_layers-2):
@@ -128,6 +129,9 @@ class ANN_multilayer:
     def compute_accuracy(self, X, y):
         P = self.evaluate_classifier(X)
         print(P[:, 0])
+        print(P[:, 0][0])
+        if np.isnan(P[:, 0][0]):
+            return 0
         correct_answers = 0
         assert np.size(P, axis=1) == np.size(X, axis=1)
         assert np.size(P, axis=1) == np.size(y)
