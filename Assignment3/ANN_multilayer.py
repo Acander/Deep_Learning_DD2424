@@ -37,20 +37,18 @@ class ANN_multilayer:
             #self.weights.append(np.random.normal(mu, sigma, (layers[i + 1], layers[i]))) # Xavier init
             self.weights.append(np.random.normal(0, 1/np.sqrt(layers[i]), (layers[i + 1], layers[i]))) # He init
             self.biases.append(np.zeros((layers[i + 1], 1)))
-            if BN:
-                #self.gammas.append(np.random.normal(mu, sigma, (layers[i + 1], 1)))
-                self.gammas.append(np.ones((layers[i + 1], 1)))
-                self.betas.append(np.zeros((layers[i + 1], 1)))
-                self.batch_means.append(np.array(layers[i+1]))
-                self.batch_variances.append(np.array(layers[i+1]))
-                self.batch_means_avg.append(np.array(layers[i+1]))
-                self.batch_variances_avg.append(np.array(layers[i+1]))
 
         for i in range(self.n_layers-2):
             self.hidden_layers_batch.append(np.matrix((layers[i + 1], 1)))
             if BN:
                 self.inputs_batch.append(np.matrix((layers[i + 1], 1)))
                 self.hidden_layers_mod_batch.append(np.matrix((layers[i + 1], 1)))
+                self.gammas.append(np.ones((layers[i + 1], 1)))
+                self.betas.append(np.zeros((layers[i + 1], 1)))
+                self.batch_means.append(np.array(layers[i + 1]))
+                self.batch_variances.append(np.array(layers[i + 1]))
+                self.batch_means_avg.append(np.array(layers[i + 1]))
+                self.batch_variances_avg.append(np.array(layers[i + 1]))
                 # self.networks_final_prob_batch.append(np.matrix((layers[i + 1], 1)))
 
 
@@ -61,18 +59,17 @@ class ANN_multilayer:
     def evaluate_classifier(self, X, training=False):
         S_l = X
         for i in range(self.n_layers - 2):
-            hidden_index = i + 1
             if self.BN:
                 self.inputs_batch[i] = S_l
 
-            self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, hidden_index)
+            self.hidden_layers_batch[i] = S_l = self.compute_hidden(S_l, i)
 
             if self.BN:
-                self.hidden_layers_mod_batch[i] = S_l = self.batch_normalization(S_l, hidden_index, training)
-                S_l = self.compute_scale_shift(S_l, hidden_index)
+                self.hidden_layers_mod_batch[i] = S_l = self.batch_normalization(S_l, i, training)
+                S_l = self.compute_scale_shift(S_l, i)
 
-            S_l = np.maximum(S_l, np.zeros((self.layers[hidden_index], np.size(X, axis=1))))  # ReLu
-        S_l = self.compute_hidden(S_l, self.n_layers - 1)
+            S_l = np.maximum(S_l, np.zeros((self.layers[i+1], np.size(X, axis=1))))  # ReLu
+        S_l = self.compute_hidden(S_l, self.n_layers - 2)
         P = softmax(S_l)
         #print(P)
         return P
@@ -86,9 +83,6 @@ class ANN_multilayer:
             batch_mean_l = self.batch_means_avg[layer]
             batch_variance_l = self.batch_variances_avg[layer]
 
-        '''print("Second: ", S_i - batch_mean_l.reshape((len(batch_mean_l), 1)))
-        print("First", np.diagflat(1/(np.sqrt(batch_variance_l + eps))))
-        print("S_i: ", S_i)'''
         S_i = np.diagflat(1/(np.sqrt(batch_variance_l + eps))).dot(S_i - batch_mean_l.reshape((len(batch_mean_l), 1)))
         return S_i
 
@@ -96,15 +90,15 @@ class ANN_multilayer:
         batch_size = np.size(S_i, axis=1)
         batch_mean = np.sum(S_i, axis=1) / batch_size  # 13
 
-        batch_variance = np.sum(np.subtract(S_i.transpose(), batch_mean) ** 2, axis=0) / batch_size # 14
+        batch_variance = np.sum((S_i.transpose() - batch_mean).transpose() ** 2, axis=1) / batch_size # 14
         return batch_mean, batch_variance
 
     def compute_hidden(self, X, layer):
-        S_l = self.weights[layer - 1].dot(X) + self.biases[layer - 1]
+        S_l = self.weights[layer].dot(X) + self.biases[layer]
         return S_l
 
     def compute_scale_shift(self, S_l, layer):
-        S_l = self.gammas[layer - 1] * S_l + self.betas[layer - 1]
+        S_l = self.gammas[layer] * S_l + self.betas[layer]
         return S_l
 
     def compute_cost_and_loss(self, X, Y):
@@ -193,9 +187,9 @@ class ANN_multilayer:
         return G_batch
 
     def update_batch_norm_params(self, G_batch, n_hidden_layers, eta, l, batch_size):
-        gradients = self.get_batch_gradient(G_batch, batch_size, n_hidden_layers - l - 1)
+        gradients = self.get_batch_gradient(G_batch, batch_size, n_hidden_layers - l)
         G_batch = G_batch*(self.gammas[n_hidden_layers-l].dot(np.ones((1, batch_size))))
-        G_batch = self.BatchNormBackPass(G_batch, n_hidden_layers - l - 1, batch_size)
+        G_batch = self.BatchNormBackPass(G_batch, n_hidden_layers - l, batch_size)
         self.update_BM_params(gradients, n_hidden_layers - l, eta)
         return G_batch
 

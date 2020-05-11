@@ -23,7 +23,7 @@ GDparams = epochs, batch_size
 
 
 def load_training_data():
-    '''[X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
+    [X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
     [X_train_2, Y_train_2, y_train_2] = load_batch('data_batch_2')
     [X_train_3, Y_train_3, y_train_3] = load_batch('data_batch_3')
     [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
@@ -31,13 +31,13 @@ def load_training_data():
 
     X_train_5, X_val = np.split(X_train_5, 2, axis=1)
     Y_train_5, Y_val = np.split(Y_train_5, 2, axis=1)
-    y_train_5, y_val = np.split(y_train_5, 2)'''
+    y_train_5, y_val = np.split(y_train_5, 2)
 
     '''[X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
     [Y_train_5, Y_val] = np.split(Y_train_5, [9000], axis=1)
     [y_train_5, y_val] = np.split(y_train_5, [9000])'''
 
-    '''X_train = np.concatenate((X_train_1, X_train_2), axis=1)
+    X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)
     X_train = np.concatenate((X_train, X_train_4), axis=1)
     X_train = np.concatenate((X_train, X_train_5), axis=1)
@@ -54,11 +54,11 @@ def load_training_data():
 
     training_data = [X_train, Y_train, y_train]
     validation_data = [X_val, Y_val, y_val]
-    test_data = load_batch('test_batch')'''
-
-    training_data = load_batch('data_batch_1')
-    validation_data = load_batch('data_batch_2')
     test_data = load_batch('test_batch')
+
+    '''training_data = load_batch('data_batch_1')
+    validation_data = load_batch('data_batch_2')
+    test_data = load_batch('test_batch')'''
 
     return training_data, validation_data, test_data
 
@@ -73,7 +73,8 @@ def pre_process_all_data(training_data, validation_data, test_data):
 def generate_neural_net(proc_train):
     output_size = np.size(proc_train[1], axis=0)
     input_size = np.size(proc_train[0], axis=0)
-    layers = [input_size, 50, output_size]
+    #layers = [input_size, 50, 50, output_size]
+    layers = [input_size, 50, 50, output_size]
 
     return ANN_multilayer(layers, lamda, eta_params, BN=BN, alfa=alfa), layers
 
@@ -94,19 +95,20 @@ def train_network(train_data, val_data):
     return neural_net.MiniBatchGD(train_data, val_data, GDparams)
 
 
-def lamda_optimization(train_data, val_data, layers, eta_params, GDparams):
+def lamda_optimization(train_data, val_data, proc_train, proc_val, layers, eta_params, GDparams):
     iterations_c = 5
     best_lamda = 0
-    high_val_acc = 0.5208
+    high_val_acc = 0
     l_min = -5
     l_max = -1
-    lamdas_course = [1.10713074e-03, 2.43313844e-05, 7.50698134e-02, 2.67369941e-04, 1.12718786e-03]
+    #lamdas_course = [1.10713074e-03, 2.43313844e-05, 7.50698134e-02, 2.67369941e-04, 1.12718786e-03]
+    lamdas_course = np.random.uniform(10**(l_min), 10**(l_max), 10)
     step_size = 2 * np.floor(np.size(proc_train[0], axis=1) / batch_size)
 
     print("COURSE SEARCH")
     for i in range(iterations_c):
         print("Iteration: ", i)
-        neural_net = ANN_multilayer(layers, lamdas_course[i], eta_params)
+        neural_net = ANN_multilayer(layers, lamdas_course[i], eta_params, BN=BN, alfa=alfa)
         neural_net.MiniBatchGD(train_data, val_data, GDparams)
         val_accuracy = neural_net.compute_accuracy(proc_val[0], proc_val[2])
         if val_accuracy > high_val_acc:
@@ -173,8 +175,8 @@ if __name__ == '__main__':
     proc_train, proc_val, proc_test = pre_process_all_data(train_data, val_data, test_data)
     train_input_output, val_input_output = setup_train_data(proc_train, proc_val)
     neural_net, layers = generate_neural_net(proc_train)
-    #lamda_optimization(proc_train, proc_val, layers, eta_params, GDparams)
+    lamda_optimization(train_input_output, val_input_output, proc_train, proc_val, layers, eta_params, GDparams)
     cost, loss = train_network(train_input_output, val_input_output)
-    #plot_cost_and_lost(cost, loss)
+    plot_cost_and_lost(cost, loss)
     print_net_performance(neural_net, proc_train, proc_val, proc_test)
     #grad_checks(proc_train, neural_net)
