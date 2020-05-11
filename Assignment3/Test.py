@@ -2,6 +2,9 @@ import numpy as np
 from Assignment3.Util import load_batch, pre_process, plot_total_loss, plot_cost
 from Assignment3.Util import print_gradient_check, printOutGradients, ComputeGradients
 from Assignment3.ANN_multilayer import ANN_multilayer
+import sys
+
+eps = sys.float_info.epsilon
 
 BN = True
 alfa = 0.9
@@ -20,7 +23,7 @@ GDparams = epochs, batch_size
 
 
 def load_training_data():
-    [X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
+    '''[X_train_1, Y_train_1, y_train_1] = load_batch('data_batch_1')
     [X_train_2, Y_train_2, y_train_2] = load_batch('data_batch_2')
     [X_train_3, Y_train_3, y_train_3] = load_batch('data_batch_3')
     [X_train_4, Y_train_4, y_train_4] = load_batch('data_batch_4')
@@ -28,13 +31,13 @@ def load_training_data():
 
     X_train_5, X_val = np.split(X_train_5, 2, axis=1)
     Y_train_5, Y_val = np.split(Y_train_5, 2, axis=1)
-    y_train_5, y_val = np.split(y_train_5, 2)
+    y_train_5, y_val = np.split(y_train_5, 2)'''
 
     '''[X_train_5, X_val] = np.split(X_train_5, [9000], axis=1)
     [Y_train_5, Y_val] = np.split(Y_train_5, [9000], axis=1)
     [y_train_5, y_val] = np.split(y_train_5, [9000])'''
 
-    X_train = np.concatenate((X_train_1, X_train_2), axis=1)
+    '''X_train = np.concatenate((X_train_1, X_train_2), axis=1)
     X_train = np.concatenate((X_train, X_train_3), axis=1)
     X_train = np.concatenate((X_train, X_train_4), axis=1)
     X_train = np.concatenate((X_train, X_train_5), axis=1)
@@ -51,11 +54,11 @@ def load_training_data():
 
     training_data = [X_train, Y_train, y_train]
     validation_data = [X_val, Y_val, y_val]
-    test_data = load_batch('test_batch')
-
-    '''training_data = load_batch('data_batch_1')
-    validation_data = load_batch('data_batch_2')
     test_data = load_batch('test_batch')'''
+
+    training_data = load_batch('data_batch_1')
+    validation_data = load_batch('data_batch_2')
+    test_data = load_batch('test_batch')
 
     return training_data, validation_data, test_data
 
@@ -70,7 +73,7 @@ def pre_process_all_data(training_data, validation_data, test_data):
 def generate_neural_net(proc_train):
     output_size = np.size(proc_train[1], axis=0)
     input_size = np.size(proc_train[0], axis=0)
-    layers = [input_size, 50, 50, output_size]
+    layers = [input_size, 50, output_size]
 
     return ANN_multilayer(layers, lamda, eta_params, BN=BN, alfa=alfa), layers
 

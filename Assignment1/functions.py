@@ -1,8 +1,10 @@
 import numpy as np
+import scipy.special
 
 def softmax(x):
 	""" Standard definition of the softmax function """
-	return np.exp(x) / np.sum(np.exp(x), axis=0)
+	#return np.exp(x) / np.sum(np.exp(x), axis=0)
+	return scipy.special.softmax(x, axis=0)
 
 def LoadBatch(filename):
 	""" Copied from the dataset website """

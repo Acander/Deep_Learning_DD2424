@@ -3,6 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Assignment1/functions.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment1/functions.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assignment3/ANN_multilayer.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment3/ANN_multilayer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assignment3/Test.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment3/Test.py" afterDir="false" />
     </list>
@@ -18,7 +19,7 @@
     <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$TwoLayerNet.coverage" NAME="TwoLayerNet Coverage Results" MODIFIED="1588594656155" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment2" />
     <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$NeuralNet.coverage" NAME="NeuralNet Coverage Results" MODIFIED="1586517633706" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment2" />
     <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Main.coverage" NAME="Main Coverage Results" MODIFIED="1587827752827" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/TestTensorFlow" />
-    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Test.coverage" NAME="Test Coverage Results" MODIFIED="1589126849978" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment3" />
+    <SUITE FILE_PATH="coverage/Deep_Learning_DD2424$Test.coverage" NAME="Test Coverage Results" MODIFIED="1589157747337" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/Assignment3" />
   </component>
   <component name="DatabaseView">
     <option name="SHOW_INTERMEDIATE" value="true" />
@@ -63,8 +64,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Assignment3/Test.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="614">
-              <caret line="175" selection-start-line="175" selection-end-line="175" />
+            <state relative-caret-position="1020">
+              <caret line="60" column="40" lean-forward="true" selection-start-line="60" selection-start-column="40" selection-end-line="60" selection-end-column="40" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -75,7 +76,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Assignment3/Util.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="415">
+            <state relative-caret-position="-1625">
               <caret line="40" selection-start-line="40" selection-end-line="40" />
             </state>
           </provider>
@@ -84,8 +85,20 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Assignment3/ANN_multilayer.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="234">
-              <caret line="79" column="16" lean-forward="true" selection-start-line="79" selection-start-column="16" selection-end-line="79" selection-end-column="16" />
+            <state relative-caret-position="1348">
+              <caret line="203" column="48" selection-start-line="203" selection-start-column="48" selection-end-line="203" selection-end-column="48" />
+              <folding>
+                <element signature="e#0#18#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/Assignment1/functions.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="136">
+              <caret line="8" column="24" lean-forward="true" selection-start-line="8" selection-start-column="24" selection-end-line="8" selection-end-column="24" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -123,7 +136,6 @@
       <list>
         <option value="$PROJECT_DIR$/Assignment1/Assignment1.py" />
         <option value="$PROJECT_DIR$/Assignment1/assignment1.py" />
-        <option value="$PROJECT_DIR$/Assignment1/functions.py" />
         <option value="$PROJECT_DIR$/Assignment1/NeuralNet.py" />
         <option value="$PROJECT_DIR$/Assignment2/NeuralNet.py" />
         <option value="$PROJECT_DIR$/TestTensorFlow/main.py" />
@@ -132,6 +144,7 @@
         <option value="$PROJECT_DIR$/Assignment3/MultilayerNet.py" />
         <option value="$PROJECT_DIR$/Assignment3/Driver.py" />
         <option value="$PROJECT_DIR$/Assignment3/Util.py" />
+        <option value="$PROJECT_DIR$/Assignment1/functions.py" />
         <option value="$PROJECT_DIR$/Assignment3/Test.py" />
         <option value="$PROJECT_DIR$/Assignment3/ANN_multilayer.py" />
       </list>
@@ -347,12 +360,12 @@
       <workItem from="1588773633006" duration="7715000" />
       <workItem from="1588829885766" duration="602000" />
       <workItem from="1588913150954" duration="2648000" />
-      <workItem from="1589048191209" duration="35157000" />
+      <workItem from="1589048191209" duration="60051000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="424698000" />
+    <option name="totallyTimeSpent" value="449592000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1912" y="-8" width="1936" height="1216" extended-state="6" />
@@ -404,13 +417,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="17">
           <caret line="4299" selection-start-line="4299" selection-end-line="4299" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Assignment1/functions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="442">
-          <caret line="26" column="47" selection-start-line="26" selection-start-column="47" selection-end-line="26" selection-end-column="47" />
         </state>
       </provider>
     </entry>
@@ -536,13 +542,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Assignment3/Util.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="415">
-          <caret line="40" selection-start-line="40" selection-end-line="40" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/Assignment3/Assign3_submission.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4439">
@@ -553,10 +552,27 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment3/Util.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1625">
+          <caret line="40" selection-start-line="40" selection-end-line="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Assignment1/functions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="136">
+          <caret line="8" column="24" lean-forward="true" selection-start-line="8" selection-start-column="24" selection-end-line="8" selection-end-column="24" />
+          <folding>
+            <element signature="e#0#18#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/Assignment3/Test.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="614">
-          <caret line="175" selection-start-line="175" selection-end-line="175" />
+        <state relative-caret-position="1020">
+          <caret line="60" column="40" lean-forward="true" selection-start-line="60" selection-start-column="40" selection-end-line="60" selection-end-column="40" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
@@ -565,8 +581,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/Assignment3/ANN_multilayer.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="234">
-          <caret line="79" column="16" lean-forward="true" selection-start-line="79" selection-start-column="16" selection-end-line="79" selection-end-column="16" />
+        <state relative-caret-position="1348">
+          <caret line="203" column="48" selection-start-line="203" selection-start-column="48" selection-end-line="203" selection-end-column="48" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>
