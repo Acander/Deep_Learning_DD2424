@@ -47,6 +47,11 @@ def create_one_hot_encoding(index, nr_chars):
     array[index] = 1
     return array
 
+def create_train_dataset(book_data, seq_len):
+    X_chars = book_data[0:seq_len]
+    Y_chars = book_data[1:seq_len+1]
+    return X_chars, Y_chars
+
 def run():
     book_data = load_book()
     book_chars = set_chars(book_data)
@@ -72,9 +77,14 @@ def sequence_testing():
     sequence = synthesize_sequence(rnn, np.zeros(rnn.m), x0, 10, char_set)
     print(sequence)
 
+def dataset_testing():
+    book = load_book()
+    create_train_dataset(book, 10)
+
 if __name__ == '__main__':
     #run()
 
     # TESTING
     #######################################
-    sequence_testing()
+    #sequence_testing()
+    dataset_testing()
