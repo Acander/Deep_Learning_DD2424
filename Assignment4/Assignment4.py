@@ -51,7 +51,7 @@ def forward_pass(rnn, ht, xt):
 
 
 def cross_entropy(y, p):
-    return -np.log10(np.reshape(y, (1, len(y))).dot(p)[0])
+    return -np.log(np.reshape(y, (1, len(y))).dot(p)[0])
 
 
 def batch_forward_pass(X, Y, h, rnn):
@@ -185,73 +185,73 @@ def test_back_prop():
 
 def numericalGradients(X, Y, rnn, h=1e-4):
     numV = np.zeros(rnn.weights_V.shape)
-    h0 = np.zeros(rnn.m)
+    #h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_V.shape[0]):
         for j in range(rnn.weights_V.shape[1]):
             orgVal = rnn.weights_V[i, j]
 
             rnn.weights_V[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, h0, rnn)
+            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_V[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, h0, rnn)
+            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numV[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_V[i, j] = orgVal
 
     # W
     numW = np.zeros(rnn.weights_W.shape)
-    h0 = np.zeros(rnn.m)
+    #h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_W.shape[0]):
         for j in range(rnn.weights_W.shape[1]):
             orgVal = rnn.weights_W[i, j]
 
             rnn.weights_W[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, h0, rnn)
+            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_W[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, h0, rnn)
+            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numW[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_W[i, j] = orgVal
 
     # U
     numU = np.zeros(rnn.weights_U.shape)
-    h0 = np.zeros(rnn.m)
+    #h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_U.shape[0]):
         for j in range(rnn.weights_U.shape[1]):
             orgVal = rnn.weights_U[i, j]
 
             rnn.weights_U[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, h0, rnn)
+            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_U[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, h0, rnn)
+            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numU[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_U[i, j] = orgVal
 
     # b
     numB = np.zeros(rnn.bias_b.shape)
-    h0 = np.zeros(rnn.m)
+    #h0 = np.zeros(rnn.m)
     for i in range(numB.shape[0]):
         orgVal = rnn.bias_b[i]
 
         rnn.bias_b[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, h0, rnn)
+        _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         rnn.bias_b[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, h0, rnn)
+        _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         numB[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_b[i] = orgVal
 
     # c
     numC = np.zeros(rnn.bias_c.shape)
-    h0 = np.zeros(rnn.m)
+    #h0 = np.zeros(rnn.m)
     for i in range(numC.shape[0]):
         orgVal = rnn.bias_c[i]
 
         rnn.bias_c[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, h0, rnn)
+        _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         rnn.bias_c[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, h0, rnn)
+        _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         numC[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_c[i] = orgVal
