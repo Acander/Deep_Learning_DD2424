@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/Deep_Learning_DD2424.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Deep_Learning_DD2424.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assignment4/Assignment4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment4/Assignment4.py" afterDir="false" />
     </list>
@@ -65,10 +63,10 @@
   </component>
   <component name="PropertiesComponent">
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/../DD2438_Assignment4" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
     <property name="nodejs_npm_path_reset_for_default_project" value="true" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="editor.preferences.fonts.default" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -248,29 +246,38 @@
     <option name="version" value="1" />
   </component>
   <component name="WindowStateProjectService">
-    <state x="1220" y="298" key="FileChooserDialogImpl" timestamp="1590449235020">
+    <state x="1220" y="298" key="FileChooserDialogImpl" timestamp="1590474585479">
       <screen x="0" y="0" width="1920" height="1080" />
     </state>
-    <state x="1220" y="298" key="FileChooserDialogImpl/0.0.1920.1080@0.0.1920.1080" timestamp="1590449235020" />
-    <state width="950" height="317" key="GridCell.Tab.0.bottom" timestamp="1590448673022">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state width="950" height="317" key="GridCell.Tab.0.bottom/0.0.1920.1080@0.0.1920.1080" timestamp="1590448673022" />
-    <state width="950" height="317" key="GridCell.Tab.0.center" timestamp="1590448673021">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state width="950" height="317" key="GridCell.Tab.0.center/0.0.1920.1080@0.0.1920.1080" timestamp="1590448673021" />
-    <state width="950" height="317" key="GridCell.Tab.0.left" timestamp="1590448673021">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state width="950" height="317" key="GridCell.Tab.0.left/0.0.1920.1080@0.0.1920.1080" timestamp="1590448673021" />
-    <state width="950" height="317" key="GridCell.Tab.0.right" timestamp="1590448673022">
-      <screen x="0" y="0" width="1920" height="1080" />
-    </state>
-    <state width="950" height="317" key="GridCell.Tab.0.right/0.0.1920.1080@0.0.1920.1080" timestamp="1590448673022" />
-    <state x="2381" y="245" key="SettingsEditor" timestamp="1590143820256">
+    <state x="1220" y="298" key="FileChooserDialogImpl/0.0.1920.1080@0.0.1920.1080" timestamp="1590474585479" />
+    <state width="1899" height="324" key="GridCell.Tab.0.bottom" timestamp="1590515520400">
       <screen x="1920" y="0" width="1920" height="1200" />
     </state>
+    <state width="938" height="361" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590484612596" />
+    <state width="1899" height="324" key="GridCell.Tab.0.bottom/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590515520400" />
+    <state width="938" height="324" key="GridCell.Tab.0.bottom/0.0.1920.1080@0.0.1920.1080" timestamp="1590501645652" />
+    <state width="1899" height="324" key="GridCell.Tab.0.center" timestamp="1590515520399">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state width="938" height="361" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590484612596" />
+    <state width="1899" height="324" key="GridCell.Tab.0.center/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590515520399" />
+    <state width="938" height="324" key="GridCell.Tab.0.center/0.0.1920.1080@0.0.1920.1080" timestamp="1590501645652" />
+    <state width="1899" height="324" key="GridCell.Tab.0.left" timestamp="1590515520399">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state width="938" height="361" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590484612595" />
+    <state width="1899" height="324" key="GridCell.Tab.0.left/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590515520399" />
+    <state width="938" height="324" key="GridCell.Tab.0.left/0.0.1920.1080@0.0.1920.1080" timestamp="1590501645651" />
+    <state width="1899" height="324" key="GridCell.Tab.0.right" timestamp="1590515520399">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state width="938" height="361" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590484612596" />
+    <state width="1899" height="324" key="GridCell.Tab.0.right/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590515520399" />
+    <state width="938" height="324" key="GridCell.Tab.0.right/0.0.1920.1080@0.0.1920.1080" timestamp="1590501645652" />
+    <state x="461" y="221" key="SettingsEditor" timestamp="1590481470258">
+      <screen x="0" y="0" width="1920" height="1080" />
+    </state>
+    <state x="461" y="221" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590481470258" />
     <state x="2381" y="245" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590143820256" />
   </component>
 </project>
