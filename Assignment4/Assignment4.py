@@ -2,11 +2,11 @@ import numpy as np
 from array import array
 from Assignment1.functions import softmax
 
-TAU = 10
+TAO = 25
 
 class RNN:
     def __init__(self, k):
-        self.m = 100
+        self.m = 5
         self.k = k
         sigma = 0.01
 
@@ -39,9 +39,9 @@ def synthesize_sequence(rnn, h0, x0, n, chars):
     return ''.join(final_sequence)
 
 def forward_pass(rnn, ht, xt):
-    at = rnn.weights_W.dot(ht) + rnn.weights_U.dot(xt) + rnn.bias_b  # at = W ht−1 + Uxt + b (1)
+    at = rnn.weights_W @ ht + rnn.weights_U @ xt + rnn.bias_b  # at = W ht−1 + Uxt + b (1)
     ht = np.tanh(at)  # ht = tanh(at) (2)
-    ot = rnn.weights_V.dot(ht) + rnn.bias_c  # ot = V ht + c (3)
+    ot = rnn.weights_V @ ht + rnn.bias_c  # ot = V ht + c (3)
     pt = softmax(ot)  # pt = SoftMax(ot)
     # char_index = np.argmax(pt)
 
@@ -54,19 +54,18 @@ def cross_entropy(y, p):
     return -np.log10(np.reshape(y, (1, len(y))).dot(p)[0])
 
 
-def batch_forward_pass(X, Y, rnn):
+def batch_forward_pass(X, Y, h, rnn):
     final_sequence = []
     A = []
     H = []
     O = []
     P = []
-    h0 = np.zeros(rnn.m)
-    for i in range(np.size(X, axis=0)):
-        char_index, fp_output = forward_pass(rnn, h0, X[i])
+    for i in range(TAO):
+        char_index, fp_output = forward_pass(rnn, h, X[i])
         final_sequence.append(char_index)
-        at, ht, ot, pt = fp_output
+        at, h, ot, pt = fp_output
         A.append(at)
-        H.append(ht)
+        H.append(h.copy())
         O.append(ot)
         P.append(pt)
 
@@ -82,38 +81,39 @@ def batch_forward_pass(X, Y, rnn):
     return [A, H, O, P], loss
 
 def compute_gradients(X, Y, h, rnn):
-    tao = np.size(X, axis=0)
-    [A, H, O, P], loss = batch_forward_pass(X, Y, rnn)
+    tao = TAO
+    [A, H, O, P], loss = batch_forward_pass(X, Y, h, rnn)
     da = np.zeros((tao, rnn.m))
     dh = np.zeros((tao, rnn.m))
 
     dO = np.array(-(Y-P))
 
-    dh[tao-1] = np.dot(dO[tao-1], rnn.weights_V)
+    dh[tao-1] = dO[tao-1] @ rnn.weights_V
 
-    da[tao-1] = np.dot(dh[tao-1], np.diag(1-np.tanh(A[tao-1])))
+    da[tao-1] = dh[tao-1] @ np.diag(1-np.square(np.tanh(A[tao-1])))
 
     for i in range(tao-2, -1, -1):
-        dh[i] = np.dot(dO[i], rnn.weights_V) + np.dot(da[i+1], rnn.weights_W)
-        da[i] = np.dot(dh[i], np.diag(1-np.tanh(A[i]))**2)
+        dh[i] = dO[i] @ rnn.weights_V + da[i+1] @ rnn.weights_W
+        da[i] = dh[i] @ np.diag(1-np.square(np.tanh(A[i])))
 
     dc = np.sum(dO, axis=0)
 
     dW = 0
     dV = 0
 
-    dW += np.dot(np.reshape(da[0], (len(da[0]), 1)), h.transpose())
+    dW += np.reshape(da[0], (len(da[0]), 1)) @ np.reshape(h, (1, len(da[0])))
 
     for i in range(1, tao):
-        dW += np.dot(np.reshape(da[0], (len(da[0]), 1)), np.reshape(H[i - 1], (1, len(H[i - 1]))))
-        dV += np.dot(np.reshape(dO[i-1], (len(dO[i-1]), 1)), np.reshape(H[i - 1], (1, len(H[i - 1])))) #TODO CHECK IF BOTH SHOULD BE TRANSPOSED
+        dW += np.reshape(da[i], (len(da[i]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
+        dV += np.reshape(dO[i-1], (len(dO[i-1]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1]))) #TODO CHECK IF BOTH SHOULD BE TRANSPOSED
 
-    dV += np.dot(np.reshape(dO[tao-1], (len(dO[tao-1]), 1)), np.reshape(H[tao - 1], (1, len(H[tao - 1]))))
+    dV += np.reshape(dO[tao-1], (len(dO[tao-1]), 1)) @ np.reshape(H[tao - 1], (1, len(H[tao - 1])))
+
 
     db = np.sum(da, axis=0)
-    dU = np.dot(da.transpose(), X)
+    dU = da.transpose() @ X
 
-    #h = H[tao-1]
+    h = H[tao-1]
     gradients = Gradients(dU, dW, dV, db, dc)
     return gradients, loss
 
@@ -135,15 +135,15 @@ def create_one_hot_encoding(index, nr_chars):
 
 ######################################################################
 
-def create_train_dataset(book_data, tau, char_table):
-    X_chars = book_data[0:tau]
-    Y_chars = book_data[1:tau+1]
+def create_train_dataset(book_data, tao, char_table):
+    X_chars = book_data[0:tao]
+    Y_chars = book_data[1:tao+1]
 
     nr_chars = len(char_table)
 
     X = []
     Y = []
-    for i in range(tau):
+    for i in range(tao):
         X.append(create_one_hot_encoding(char_table.index(X_chars[i]), nr_chars))
         Y.append(create_one_hot_encoding(char_table.index(Y_chars[i]), nr_chars))
     return X, Y
@@ -177,78 +177,81 @@ def sequence_testing():
 def test_back_prop():
     book = load_book()
     char_set = char_lookup_table(book)
-    X, Y = create_train_dataset(book, TAU, char_set)
-    #print("X-data", X)
-    #print("Y-data", Y)
+    X, Y = create_train_dataset(book, TAO, char_set)
     rnn = RNN(len(char_set))
-    h = np.zeros((rnn.m, 1))
+    h = np.zeros(rnn.m)
     train_data = X, Y
     grad_check(rnn, train_data, h)
 
 def numericalGradients(X, Y, rnn, h=1e-4):
     numV = np.zeros(rnn.weights_V.shape)
+    h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_V.shape[0]):
         for j in range(rnn.weights_V.shape[1]):
             orgVal = rnn.weights_V[i, j]
 
             rnn.weights_V[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, rnn)
+            _, l1 = batch_forward_pass(X, Y, h0, rnn)
             rnn.weights_V[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, rnn)
+            _, l2 = batch_forward_pass(X, Y, h0, rnn)
             numV[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_V[i, j] = orgVal
 
     # W
     numW = np.zeros(rnn.weights_W.shape)
+    h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_W.shape[0]):
         for j in range(rnn.weights_W.shape[1]):
             orgVal = rnn.weights_W[i, j]
 
             rnn.weights_W[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, rnn)
+            _, l1 = batch_forward_pass(X, Y, h0, rnn)
             rnn.weights_W[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, rnn)
+            _, l2 = batch_forward_pass(X, Y, h0, rnn)
             numW[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_W[i, j] = orgVal
 
     # U
     numU = np.zeros(rnn.weights_U.shape)
+    h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_U.shape[0]):
         for j in range(rnn.weights_U.shape[1]):
             orgVal = rnn.weights_U[i, j]
 
             rnn.weights_U[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, rnn)
+            _, l1 = batch_forward_pass(X, Y, h0, rnn)
             rnn.weights_U[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, rnn)
+            _, l2 = batch_forward_pass(X, Y, h0, rnn)
             numU[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_U[i, j] = orgVal
 
     # b
     numB = np.zeros(rnn.bias_b.shape)
+    h0 = np.zeros(rnn.m)
     for i in range(numB.shape[0]):
         orgVal = rnn.bias_b[i]
 
         rnn.bias_b[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, rnn)
+        _, l1 = batch_forward_pass(X, Y, h0, rnn)
         rnn.bias_b[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, rnn)
+        _, l2 = batch_forward_pass(X, Y, h0, rnn)
         numB[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_b[i] = orgVal
 
     # c
     numC = np.zeros(rnn.bias_c.shape)
+    h0 = np.zeros(rnn.m)
     for i in range(numC.shape[0]):
         orgVal = rnn.bias_c[i]
 
         rnn.bias_c[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, rnn)
+        _, l1 = batch_forward_pass(X, Y, h0, rnn)
         rnn.bias_c[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, rnn)
+        _, l2 = batch_forward_pass(X, Y, h0, rnn)
         numC[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_c[i] = orgVal
@@ -268,6 +271,14 @@ def grad_check(rnn, train_data, h):
     db = gradients.g_b
     dc = gradients.g_c
 
+    '''print("Analytically vs Nummerically ->")
+    print("V:", dV, num_dV)
+    print("W:", dW, num_dW)
+    print("U:", dU, num_dU)
+    print("b:", db, num_db)
+    print("c:", dc, num_dc)'''
+
+
     maxRelError(num_dV, dV, weight_name="V")
     maxRelError(num_dW, dW, weight_name="W")
     maxRelError(num_dU, dU, weight_name="U")
@@ -280,6 +291,10 @@ def maxRelError(grad_n, grad_a, weight_name):
     relErr = absErr / max(1e-4, absErrSum)
     print(str(weight_name) + ":", relErr)
 
+def test():
+    array = np.array([0, 1, 0, 1, 0, 1])
+    print(array.reshape((len(array), 1)))
+
 if __name__ == '__main__':
     #run()
 
@@ -288,3 +303,4 @@ if __name__ == '__main__':
     #sequence_testing()
     #dataset_testing()
     test_back_prop()
+    #test()
