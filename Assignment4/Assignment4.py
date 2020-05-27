@@ -1,4 +1,6 @@
 import numpy as np
+import matplotlib.pyplot as plt
+import pickle
 from array import array
 from Assignment1.functions import softmax
 
@@ -8,6 +10,7 @@ EPOCHS = 10
 SYNTH_LEN = 200
 SYNTH_STEP = 500
 LOSS_PRINT_STEP = 100
+
 
 
 class RNN:
@@ -42,6 +45,15 @@ class Gradients:
 
     def clip(self, grad):
         return max(min(grad, 5), -5)
+
+def saveRNN(rnn):
+    fileHandler = open(rnnFileName, 'wb')
+    pickle.dump(rnn, fileHandler)
+
+
+def loadRNN():
+    fileHandler = open(rnnFileName, 'rb')
+    return pickle.load(fileHandler)
 
 
 def synthesize_sequence(rnn, h0, x0, n, chars):
@@ -144,7 +156,6 @@ def compute_gradients(X, Y, h, rnn, smooth_loss):
 def train_RNN():
     book = load_book()
     char_set = char_lookup_table(book)
-    len(book)-TAO-1
     e = 0
     smooth_loss = 0
     rnn = RNN(len(char_set))
@@ -152,14 +163,23 @@ def train_RNN():
     x0[0] = 1
     X, Y = create_train_dataset(book, TAO, char_set, e)
     hprev = np.zeros(rnn.m)
-    for i in range(EPOCHS):
-        compute_gradients(X, Y, hprev, rnn, smooth_loss)
+    update_steps = int(len(book)/TAO*EPOCHS)
+    for i in range(update_steps):
+        gradients, smooth_loss = compute_gradients(X, Y, hprev, rnn, smooth_loss)
 
         if e > len(book) - TAO-1:
             e = 0 # Reach end of book
 
         if i % SYNTH_STEP:
             synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set)
+
+        if i % LOSS_PRINT_STEP:
+            print("iter =", i, "smooth_loss: ", smooth_loss)
+            plt.plot(i, )
+
+    plt.xlabel('Update Step')
+    plt.ylabel('Smooth Loss')
+    plt.show()
 
 # LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
 #####################################################################
