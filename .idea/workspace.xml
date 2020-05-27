@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="50f9c146-a341-43df-b380-5883d990ad46" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Assignment4/Assignment4.py" beforeDir="false" afterPath="$PROJECT_DIR$/Assignment4/Assignment4.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -278,5 +279,9 @@
     </state>
     <state x="461" y="221" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1200@0.0.1920.1080" timestamp="1590481470258" />
     <state x="2381" y="245" key="SettingsEditor/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590143820256" />
+    <state x="2543" y="265" width="672" height="678" key="search.everywhere.popup" timestamp="1590583622943">
+      <screen x="1920" y="0" width="1920" height="1200" />
+    </state>
+    <state x="2543" y="265" width="672" height="678" key="search.everywhere.popup/0.0.1920.1080/1920.0.1920.1200@1920.0.1920.1200" timestamp="1590583622943" />
   </component>
 </project>

@@ -6,12 +6,13 @@ from Assignment1.functions import softmax
 
 TAO = 25
 ETA = 0.1
+EPS = 1e-10
 EPOCHS = 10
 SYNTH_LEN = 200
 SYNTH_STEP = 500
 LOSS_PRINT_STEP = 100
 
-
+RNN_FILE_NAME = "TRAINED_RNN.obj"
 
 class RNN:
     def __init__(self, k):
@@ -46,13 +47,14 @@ class Gradients:
     def clip(self, grad):
         return max(min(grad, 5), -5)
 
+
 def saveRNN(rnn):
-    fileHandler = open(rnnFileName, 'wb')
+    fileHandler = open(RNN_FILE_NAME, 'wb')
     pickle.dump(rnn, fileHandler)
 
 
 def loadRNN():
-    fileHandler = open(rnnFileName, 'rb')
+    fileHandler = open(RNN_FILE_NAME, 'rb')
     return pickle.load(fileHandler)
 
 
@@ -158,15 +160,21 @@ def train_RNN():
     char_set = char_lookup_table(book)
     e = 0
     smooth_loss = 0
+
     rnn = RNN(len(char_set))
+    mU, mW, mV, mb, mc = 0, 0, 0, 0, 0
+    M = mU, mW, mV, mb, mc
     x0 = np.zeros(rnn.k)
     x0[0] = 1
+
     X, Y = create_train_dataset(book, TAO, char_set, e)
     hprev = np.zeros(rnn.m)
     update_steps = int(len(book)/TAO*EPOCHS)
     for i in range(update_steps):
         gradients, smooth_loss = compute_gradients(X, Y, hprev, rnn, smooth_loss)
+        update_weights(rnn, gradients, M)
 
+        e += 1
         if e > len(book) - TAO-1:
             e = 0 # Reach end of book
 
@@ -180,6 +188,22 @@ def train_RNN():
     plt.xlabel('Update Step')
     plt.ylabel('Smooth Loss')
     plt.show()
+
+    saveRNN(rnn)
+
+def update_weights(rnn, gradients, M):
+    mU, mW, mV, mb, mc = M
+    ada_grad(mU, rnn.weights_U, gradients.g_U)
+    ada_grad(mW, rnn.weights_W, gradients.g_W)
+    ada_grad(mV, rnn.weights_V, gradients.g_V)
+    ada_grad(mb, rnn.bias_b, gradients.g_b)
+    ada_grad(mc, rnn.bias_c, gradients.g_c)
+
+
+def ada_grad(m, theta, grad):
+    m += np.square(grad)
+    theta -= ETA/np.sqrt(m + EPS) * theta
+
 
 # LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
 #####################################################################
