@@ -3,16 +3,22 @@ from array import array
 from Assignment1.functions import softmax
 
 TAO = 25
+ETA = 0.1
+EPOCHS = 10
+SYNTH_LEN = 200
+SYNTH_STEP = 500
+LOSS_PRINT_STEP = 100
+
 
 class RNN:
     def __init__(self, k):
-        self.m = 5
+        self.m = 100
         self.k = k
         sigma = 0.01
 
-        self.weights_U = np.random.normal(0, sigma, (self.m, self.k)) #Input
-        self.weights_W = np.random.normal(0, sigma, (self.m, self.m)) #Hidden to Hidden
-        self.weights_V = np.random.normal(0, sigma, (self.k, self.m)) #Output
+        self.weights_U = np.random.normal(0, sigma, (self.m, self.k))  # Input
+        self.weights_W = np.random.normal(0, sigma, (self.m, self.m))  # Hidden to Hidden
+        self.weights_V = np.random.normal(0, sigma, (self.k, self.m))  # Output
 
         self.bias_b = np.zeros(self.m)
         self.bias_c = np.zeros(self.k)
@@ -37,6 +43,7 @@ class Gradients:
     def clip(self, grad):
         return max(min(grad, 5), -5)
 
+
 def synthesize_sequence(rnn, h0, x0, n, chars):
     ht = h0
     xt = x0
@@ -47,6 +54,7 @@ def synthesize_sequence(rnn, h0, x0, n, chars):
         xt = create_one_hot_encoding(char_index, rnn.k)
 
     return ''.join(final_sequence)
+
 
 def forward_pass(rnn, ht, xt):
     at = rnn.weights_W @ ht + rnn.weights_U @ xt + rnn.bias_b  # at = W ht−1 + Uxt + b (1)
@@ -90,21 +98,22 @@ def batch_forward_pass(X, Y, h, rnn):
 
     return [A, H, O, P], loss
 
-def compute_gradients(X, Y, h, rnn):
+
+def compute_gradients(X, Y, h, rnn, smooth_loss):
     tao = TAO
     [A, H, O, P], loss = batch_forward_pass(X, Y, h, rnn)
     da = np.zeros((tao, rnn.m))
     dh = np.zeros((tao, rnn.m))
 
-    dO = np.array(-(Y-P))
+    dO = np.array(-(Y - P))
 
-    dh[tao-1] = dO[tao-1] @ rnn.weights_V
+    dh[tao - 1] = dO[tao - 1] @ rnn.weights_V
 
-    da[tao-1] = dh[tao-1] @ np.diag(1-np.square(np.tanh(A[tao-1])))
+    da[tao - 1] = dh[tao - 1] @ np.diag(1 - np.square(np.tanh(A[tao - 1])))
 
-    for i in range(tao-2, -1, -1):
-        dh[i] = dO[i] @ rnn.weights_V + da[i+1] @ rnn.weights_W
-        da[i] = dh[i] @ np.diag(1-np.square(np.tanh(A[i])))
+    for i in range(tao - 2, -1, -1):
+        dh[i] = dO[i] @ rnn.weights_V + da[i + 1] @ rnn.weights_W
+        da[i] = dh[i] @ np.diag(1 - np.square(np.tanh(A[i])))
 
     dc = np.sum(dO, axis=0)
 
@@ -115,22 +124,44 @@ def compute_gradients(X, Y, h, rnn):
 
     for i in range(1, tao):
         dW += np.reshape(da[i], (len(da[i]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
-        dV += np.reshape(dO[i-1], (len(dO[i-1]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
+        dV += np.reshape(dO[i - 1], (len(dO[i - 1]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
 
-    dV += np.reshape(dO[tao-1], (len(dO[tao-1]), 1)) @ np.reshape(H[tao - 1], (1, len(H[tao - 1])))
-
+    dV += np.reshape(dO[tao - 1], (len(dO[tao - 1]), 1)) @ np.reshape(H[tao - 1], (1, len(H[tao - 1])))
 
     db = np.sum(da, axis=0)
     dU = da.transpose() @ X
 
-    h = H[tao-1]
+    h = H[tao - 1]
 
     gradients = Gradients(dU, dW, dV, db, dc)
     gradients.clip_gradients()
-    return gradients, loss
+
+    smooth_loss = 0.999 * smooth_loss + 0.001 * loss
+
+    return gradients, smooth_loss
 
 
-#LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
+def train_RNN():
+    book = load_book()
+    char_set = char_lookup_table(book)
+    len(book)-TAO-1
+    e = 0
+    smooth_loss = 0
+    rnn = RNN(len(char_set))
+    x0 = np.zeros(rnn.k)
+    x0[0] = 1
+    X, Y = create_train_dataset(book, TAO, char_set, e)
+    hprev = np.zeros(rnn.m)
+    for i in range(EPOCHS):
+        compute_gradients(X, Y, hprev, rnn, smooth_loss)
+
+        if e > len(book) - TAO-1:
+            e = 0 # Reach end of book
+
+        if i % SYNTH_STEP:
+            synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set)
+
+# LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
 #####################################################################
 def load_book():
     book = open("Datasets/goblet_book.txt", 'r').read()
@@ -146,11 +177,10 @@ def create_one_hot_encoding(index, nr_chars):
     array[index] = 1
     return array
 
-######################################################################
 
-def create_train_dataset(book_data, tao, char_table):
-    X_chars = book_data[0:tao]
-    Y_chars = book_data[1:tao+1]
+def create_train_dataset(book_data, tao, char_table, e):
+    X_chars = book_data[e:e + tao]
+    Y_chars = book_data[e + 1:e + 1 + tao]
 
     nr_chars = len(char_table)
 
@@ -161,10 +191,14 @@ def create_train_dataset(book_data, tao, char_table):
         Y.append(create_one_hot_encoding(char_table.index(Y_chars[i]), nr_chars))
     return X, Y
 
+
+######################################################################
+
 def run():
     book_data = load_book()
     char_table = char_lookup_table(book_data)
     print(create_one_hot_encoding(1, len(char_table)))
+
 
 def sequence_testing():
     '''final_sequence = []
@@ -190,15 +224,16 @@ def sequence_testing():
 def test_back_prop():
     book = load_book()
     char_set = char_lookup_table(book)
-    X, Y = create_train_dataset(book, TAO, char_set)
+    X, Y = create_train_dataset(book, TAO, char_set, 0)
     rnn = RNN(len(char_set))
     h = np.zeros(rnn.m)
     train_data = X, Y
     grad_check(rnn, train_data, h)
 
+
 def numericalGradients(X, Y, rnn, h=1e-4):
     numV = np.zeros(rnn.weights_V.shape)
-    #h0 = np.zeros(rnn.m)
+    # h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_V.shape[0]):
         for j in range(rnn.weights_V.shape[1]):
             orgVal = rnn.weights_V[i, j]
@@ -213,7 +248,7 @@ def numericalGradients(X, Y, rnn, h=1e-4):
 
     # W
     numW = np.zeros(rnn.weights_W.shape)
-    #h0 = np.zeros(rnn.m)
+    # h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_W.shape[0]):
         for j in range(rnn.weights_W.shape[1]):
             orgVal = rnn.weights_W[i, j]
@@ -228,7 +263,7 @@ def numericalGradients(X, Y, rnn, h=1e-4):
 
     # U
     numU = np.zeros(rnn.weights_U.shape)
-    #h0 = np.zeros(rnn.m)
+    # h0 = np.zeros(rnn.m)
     for i in range(rnn.weights_U.shape[0]):
         for j in range(rnn.weights_U.shape[1]):
             orgVal = rnn.weights_U[i, j]
@@ -243,7 +278,7 @@ def numericalGradients(X, Y, rnn, h=1e-4):
 
     # b
     numB = np.zeros(rnn.bias_b.shape)
-    #h0 = np.zeros(rnn.m)
+    # h0 = np.zeros(rnn.m)
     for i in range(numB.shape[0]):
         orgVal = rnn.bias_b[i]
 
@@ -257,7 +292,7 @@ def numericalGradients(X, Y, rnn, h=1e-4):
 
     # c
     numC = np.zeros(rnn.bias_c.shape)
-    #h0 = np.zeros(rnn.m)
+    # h0 = np.zeros(rnn.m)
     for i in range(numC.shape[0]):
         orgVal = rnn.bias_c[i]
 
@@ -273,10 +308,11 @@ def numericalGradients(X, Y, rnn, h=1e-4):
     # print("Arrays are equal W:", np.array_equal(WBackup, rnn.W))
     return numV, numW, numU, numB, numC
 
+
 def grad_check(rnn, train_data, h):
     X, Y = train_data
 
-    gradients, _ = compute_gradients(X, Y, h, rnn)
+    gradients, _ = compute_gradients(X, Y, h, rnn, 0)
     num_dV, num_dW, num_dU, num_db, num_dc = numericalGradients(X, Y, rnn)
     dV = gradients.g_V
     dW = gradients.g_W
@@ -291,12 +327,12 @@ def grad_check(rnn, train_data, h):
     print("b:", db, num_db)
     print("c:", dc, num_dc)'''
 
-
     maxRelError(num_dV, dV, weight_name="V")
     maxRelError(num_dW, dW, weight_name="W")
     maxRelError(num_dU, dU, weight_name="U")
     maxRelError(num_db, db, weight_name="b")
     maxRelError(num_dc, dc, weight_name="c")
+
 
 def maxRelError(grad_n, grad_a, weight_name):
     absErr = np.sum(np.abs(grad_a - grad_n))
@@ -304,16 +340,18 @@ def maxRelError(grad_n, grad_a, weight_name):
     relErr = absErr / max(1e-4, absErrSum)
     print(str(weight_name) + ":", relErr)
 
+
 def test():
     array = np.array([0, 1, 0, 1, 0, 1])
     print(array.reshape((len(array), 1)))
 
+
 if __name__ == '__main__':
-    #run()
+    # run()
 
     # TESTING
     #######################################
-    #sequence_testing()
-    #dataset_testing()
+    # sequence_testing()
+    # dataset_testing()
     test_back_prop()
-    #test()
+    # test()
