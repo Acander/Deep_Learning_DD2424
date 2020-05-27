@@ -16,7 +16,7 @@ RNN_FILE_NAME = "TRAINED_RNN.obj"
 
 class RNN:
     def __init__(self, k):
-        self.m = 100
+        self.m = 5
         self.k = k
         sigma = 0.01
 
@@ -45,9 +45,7 @@ class Gradients:
         self.g_c = self.clip(self.g_c)
 
     def clip(self, grad):
-        five = np.ones(np.shape(grad)) * 5
-        negative_five = np.ones(np.shape(grad)) * (-5)
-        return np.maximum(np.minimum(grad, five), negative_five)
+        return np.maximum(np.minimum(grad, 1), -1)
 
 
 def saveRNN(rnn):
@@ -77,8 +75,7 @@ def forward_pass(rnn, ht, xt):
     ht = np.tanh(at)  # ht = tanh(at) (2)
     ot = rnn.weights_V @ ht + rnn.bias_c  # ot = V ht + c (3)
     pt = softmax(ot)  # pt = SoftMax(ot)
-    # char_index = np.argmax(pt)
-
+    print(pt)
     char_index = np.random.choice(a=np.arange(0, rnn.k), size=1, p=pt)[0]
     fp_output = at, ht, ot, pt
     return char_index, fp_output
@@ -88,18 +85,18 @@ def cross_entropy(y, p):
     return -np.log(np.reshape(y, (1, len(y))).dot(p)[0])
 
 
-def batch_forward_pass(X, Y, h, rnn):
+def batch_forward_pass(X, Y, ht, rnn):
     final_sequence = []
     A = []
     H = []
     O = []
     P = []
     for i in range(TAO):
-        char_index, fp_output = forward_pass(rnn, h, X[i])
+        char_index, fp_output = forward_pass(rnn, ht, X[i])
         final_sequence.append(char_index)
-        at, h, ot, pt = fp_output
+        at, ht, ot, pt = fp_output
         A.append(at)
-        H.append(h.copy())
+        H.append(ht)
         O.append(ot)
         P.append(pt)
 
@@ -112,15 +109,14 @@ def batch_forward_pass(X, Y, h, rnn):
     for i in range(np.size(X, axis=0)):
         loss += cross_entropy(Y[i], P[i])
 
-    return [A, H, O, P], loss
+    return [A, H, O, P], loss, ht
 
 
 def compute_gradients(X, Y, h, rnn, smooth_loss):
     tao = TAO
-    [A, H, O, P], loss = batch_forward_pass(X, Y, h, rnn)
+    [A, H, O, P], loss, _ = batch_forward_pass(X, Y, h, rnn)
     da = np.zeros((tao, rnn.m))
     dh = np.zeros((tao, rnn.m))
-
     dO = np.array(-(Y - P))
 
     dh[tao - 1] = dO[tao - 1] @ rnn.weights_V
@@ -157,7 +153,7 @@ def compute_gradients(X, Y, h, rnn, smooth_loss):
     else:
         smooth_loss = 0.999 * smooth_loss + 0.001 * loss
 
-    return gradients, smooth_loss
+    return gradients, smooth_loss, h
 
 
 def train_RNN():
@@ -181,17 +177,15 @@ def train_RNN():
     for epoch in range(EPOCHS):
         for e in range(0, len(book), TAO):
             X, Y = create_train_dataset(book, TAO, char_set, e)
-
-            gradients, smooth_loss = compute_gradients(X, Y, hprev, rnn, smooth_loss)
-            update_weights(rnn, gradients, M)
+            gradients, smooth_loss, h = compute_gradients(X, Y, hprev, rnn, smooth_loss)
+            M, rnn = update_weights(rnn, gradients, M)
 
             if e % LOSS_PRINT_STEP == 0:
-                print("Epoch:", epoch, "Iter =", e, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
+                #print("Epoch:", epoch, "Iter =", e, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
                 smooth_loss_data.append(smooth_loss)
 
-            if e % SYNTH_STEP == 0:
-                print(synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set))
-
+            #if e % SYNTH_STEP == 0:
+                #print(synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set))
         plt.plot(np.arange(np.size(smooth_loss)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
         plt.xlabel('Update Step')
         plt.ylabel('Smooth Loss')
@@ -201,16 +195,19 @@ def train_RNN():
 
 def update_weights(rnn, gradients, M):
     mU, mW, mV, mb, mc = M
-    ada_grad(mU, rnn.weights_U, gradients.g_U)
-    ada_grad(mW, rnn.weights_W, gradients.g_W)
-    ada_grad(mV, rnn.weights_V, gradients.g_V)
-    ada_grad(mb, rnn.bias_b, gradients.g_b)
-    ada_grad(mc, rnn.bias_c, gradients.g_c)
+    mU, rnn.weights_U = ada_grad(mU, rnn.weights_U, gradients.g_U)
+    mW, rnn.weights_W = ada_grad(mW, rnn.weights_W, gradients.g_W)
+    mV, rnn.weights_V = ada_grad(mV, rnn.weights_V, gradients.g_V)
+    mb, rnn.bias_b = ada_grad(mb, rnn.bias_b, gradients.g_b)
+    mc, rnn.bias_c = ada_grad(mc, rnn.bias_c, gradients.g_c)
+    M = mU, mW, mV, mb, mc
+    return M, rnn
 
 
 def ada_grad(m, theta, grad):
-    m += np.square(grad)
-    theta -= ETA/np.sqrt(m + EPS) * theta
+    m = m + np.square(grad)
+    theta = theta - (ETA/np.sqrt(m + EPS)) * theta
+    return m, theta
 
 
 # LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
@@ -291,9 +288,9 @@ def numericalGradients(X, Y, rnn, h=1e-4):
             orgVal = rnn.weights_V[i, j]
 
             rnn.weights_V[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l1, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_V[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l2, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numV[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_V[i, j] = orgVal
@@ -306,9 +303,9 @@ def numericalGradients(X, Y, rnn, h=1e-4):
             orgVal = rnn.weights_W[i, j]
 
             rnn.weights_W[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l1, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_W[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l2, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numW[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_W[i, j] = orgVal
@@ -321,9 +318,9 @@ def numericalGradients(X, Y, rnn, h=1e-4):
             orgVal = rnn.weights_U[i, j]
 
             rnn.weights_U[i, j] = orgVal - h
-            _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l1, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             rnn.weights_U[i, j] = orgVal + h
-            _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+            _, l2, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
             numU[i, j] = (l2 - l1) / (2 * h)
 
             rnn.weights_U[i, j] = orgVal
@@ -335,9 +332,9 @@ def numericalGradients(X, Y, rnn, h=1e-4):
         orgVal = rnn.bias_b[i]
 
         rnn.bias_b[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+        _, l1, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         rnn.bias_b[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+        _, l2, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         numB[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_b[i] = orgVal
@@ -349,9 +346,9 @@ def numericalGradients(X, Y, rnn, h=1e-4):
         orgVal = rnn.bias_c[i]
 
         rnn.bias_c[i] = orgVal - h
-        _, l1 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+        _, l1, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         rnn.bias_c[i] = orgVal + h
-        _, l2 = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
+        _, l2, _ = batch_forward_pass(X, Y, np.zeros(rnn.m), rnn)
         numC[i] = (l2 - l1) / (2 * h)
 
         rnn.bias_c[i] = orgVal
@@ -364,7 +361,7 @@ def numericalGradients(X, Y, rnn, h=1e-4):
 def grad_check(rnn, train_data, h):
     X, Y = train_data
 
-    gradients, _ = compute_gradients(X, Y, h, rnn, 0)
+    gradients, _, _ = compute_gradients(X, Y, h, rnn, 0)
     num_dV, num_dW, num_dU, num_db, num_dc = numericalGradients(X, Y, rnn)
     dV = gradients.g_V
     dW = gradients.g_W
