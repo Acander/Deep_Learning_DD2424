@@ -7,7 +7,7 @@ from Assignment1.functions import softmax
 TAO = 25
 ETA = 0.1
 EPS = 1e-10
-EPOCHS = 10
+EPOCHS = 1
 SYNTH_LEN = 200
 SYNTH_STEP = 500
 LOSS_PRINT_STEP = 100
@@ -171,32 +171,36 @@ def train_RNN():
     rnn = RNN(len(char_set))
     mU, mW, mV, mb, mc = 0, 0, 0, 0, 0
     M = mU, mW, mV, mb, mc
-    x0 = np.zeros(rnn.k)
-    x0[0] = 1
-
-    hprev = np.zeros(rnn.m)
 
     smooth_loss_data = []
 
     print("Starting training")
     print("Nr of Epochs: ", EPOCHS)
-
+    print(int(len(book)/TAO))
     for epoch in range(EPOCHS):
+        hprev = np.zeros(rnn.m)
+        iter_step = 0
         for e in range(0, len(book), TAO):
-            X, Y = create_train_dataset(book, TAO, char_set, e)
-            gradients, smooth_loss, hprev = compute_gradients(X, Y, hprev, rnn, smooth_loss)
-            #print(hprev)
-            #M = update_weights(rnn, gradients, M)
-            update_weights(rnn, gradients, M)
-            #print("Updated weights!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
-            if e % LOSS_PRINT_STEP == 0:
-                #print("Epoch:", epoch, "Iter =", e, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
+            if e > len(book) - 1 - TAO:
+                break
+
+            X, Y = create_train_dataset(book, TAO, char_set, e)
+
+            gradients, smooth_loss, h = compute_gradients(X, Y, hprev, rnn, smooth_loss)
+            M = update_weights(rnn, gradients, M)
+
+            if iter_step % LOSS_PRINT_STEP == 0:
+                print("Epoch:", epoch, "Iter =", iter_step, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
                 smooth_loss_data.append(smooth_loss)
 
-            #if e % SYNTH_STEP == 0:
-                #print(synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set))
-        plt.plot(np.arange(np.size(smooth_loss)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
+            if iter_step % SYNTH_STEP == 0:
+                print(synthesize_sequence(rnn, hprev, X[0], SYNTH_LEN, char_set))
+
+            hprev = h
+            iter_step += 1
+
+        plt.plot(np.arange(np.size(smooth_loss_data)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
         plt.xlabel('Update Step')
         plt.ylabel('Smooth Loss')
         plt.show()
@@ -261,7 +265,7 @@ def create_one_hot_encoding(index, nr_chars):
 
 def create_train_dataset(book_data, tao, char_table, e):
     X_chars = book_data[e:e + tao]
-    Y_chars = book_data[e + 1:e + 1 + tao]
+    Y_chars = book_data[e + 1:e + tao + 1]
 
     nr_chars = len(char_table)
 
@@ -425,6 +429,7 @@ def maxRelError(grad_n, grad_a, weight_name):
 def test():
     array = np.array([0, 1, 0, 1, 0, 1])
     print(array.reshape((len(array), 1)))
+
 
 
 if __name__ == '__main__':
