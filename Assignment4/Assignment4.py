@@ -7,7 +7,7 @@ from Assignment1.functions import softmax
 TAO = 25
 ETA = 0.1
 EPS = 1e-10
-EPOCHS = 1
+EPOCHS = 2
 SYNTH_LEN = 200
 SYNTH_STEP = 500
 LOSS_PRINT_STEP = 100
@@ -16,7 +16,7 @@ RNN_FILE_NAME = "TRAINED_RNN.obj"
 
 class RNN:
     def __init__(self, k):
-        self.m = 5
+        self.m = 100
         self.k = k
         sigma = 0.01
 
@@ -168,7 +168,8 @@ def train_RNN():
     char_set = char_lookup_table(book)
     smooth_loss = None
 
-    rnn = RNN(len(char_set))
+    #rnn = RNN(len(char_set))
+    rnn = loadRNN()
     mU, mW, mV, mb, mc = 0, 0, 0, 0, 0
     M = mU, mW, mV, mb, mc
 
@@ -177,9 +178,9 @@ def train_RNN():
     print("Starting training")
     print("Nr of Epochs: ", EPOCHS)
     print(int(len(book)/TAO))
+    iter_step = 0
     for epoch in range(EPOCHS):
         hprev = np.zeros(rnn.m)
-        iter_step = 0
         for e in range(0, len(book), TAO):
 
             if e > len(book) - 1 - TAO:
@@ -225,6 +226,7 @@ def ada_grad(m, theta, grad):
 
 
 def update_weights(rnn, gradients, M):
+    #AdaGrad
     mU, mW, mV, mb, mc = M
     mU = mU + np.square(gradients.g_U)
     mW = mW + np.square(gradients.g_W)
