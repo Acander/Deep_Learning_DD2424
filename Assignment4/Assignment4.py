@@ -45,7 +45,7 @@ class Gradients:
         self.g_c = self.clip(self.g_c)
 
     def clip(self, grad):
-        return np.maximum(np.minimum(grad, 1), -1)
+        return np.maximum(np.minimum(grad, 5), -5)
 
 
 def saveRNN(rnn):
@@ -72,10 +72,17 @@ def synthesize_sequence(rnn, h0, x0, n, chars):
 
 def forward_pass(rnn, ht, xt):
     at = rnn.weights_W @ ht + rnn.weights_U @ xt + rnn.bias_b  # at = W ht−1 + Uxt + b (1)
+    '''print("W: ", rnn.weights_W)
+    print("U: ", rnn.weights_U)
+    print("b: ", rnn.bias_b)'''
     ht = np.tanh(at)  # ht = tanh(at) (2)
     ot = rnn.weights_V @ ht + rnn.bias_c  # ot = V ht + c (3)
     pt = softmax(ot)  # pt = SoftMax(ot)
-    print(pt)
+    #print("--------------------------------------------------------")
+    '''print(at)
+    print(ht)
+    print(ot)
+    print(pt)'''
     char_index = np.random.choice(a=np.arange(0, rnn.k), size=1, p=pt)[0]
     fp_output = at, ht, ot, pt
     return char_index, fp_output
@@ -177,8 +184,11 @@ def train_RNN():
     for epoch in range(EPOCHS):
         for e in range(0, len(book), TAO):
             X, Y = create_train_dataset(book, TAO, char_set, e)
-            gradients, smooth_loss, h = compute_gradients(X, Y, hprev, rnn, smooth_loss)
-            M, rnn = update_weights(rnn, gradients, M)
+            gradients, smooth_loss, hprev = compute_gradients(X, Y, hprev, rnn, smooth_loss)
+            #print(hprev)
+            #M = update_weights(rnn, gradients, M)
+            update_weights(rnn, gradients, M)
+            #print("Updated weights!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
             if e % LOSS_PRINT_STEP == 0:
                 #print("Epoch:", epoch, "Iter =", e, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
@@ -193,7 +203,7 @@ def train_RNN():
 
     saveRNN(rnn)
 
-def update_weights(rnn, gradients, M):
+'''def update_weights(rnn, gradients, M):
     mU, mW, mV, mb, mc = M
     mU, rnn.weights_U = ada_grad(mU, rnn.weights_U, gradients.g_U)
     mW, rnn.weights_W = ada_grad(mW, rnn.weights_W, gradients.g_W)
@@ -207,8 +217,30 @@ def update_weights(rnn, gradients, M):
 def ada_grad(m, theta, grad):
     m = m + np.square(grad)
     theta = theta - (ETA/np.sqrt(m + EPS)) * theta
-    return m, theta
+    return m, theta'''
 
+
+def update_weights(rnn, gradients, M):
+    mU, mW, mV, mb, mc = M
+    mU = mU + np.square(gradients.g_U)
+    mW = mW + np.square(gradients.g_W)
+    mV = mV + np.square(gradients.g_V)
+    mb = mb + np.square(gradients.g_b)
+    mc = mc + np.square(gradients.g_c)
+    rnn.weights_U = rnn.weights_U - (ETA / np.sqrt(mU + EPS)) * gradients.g_U
+    rnn.weights_W = rnn.weights_W - (ETA / np.sqrt(mW + EPS)) * gradients.g_W
+    rnn.weights_V = rnn.weights_V - (ETA / np.sqrt(mV + EPS)) * gradients.g_V
+    rnn.bias_b = rnn.bias_b - (ETA / np.sqrt(mb + EPS)) * gradients.g_b
+    rnn.bias_c = rnn.bias_c - (ETA / np.sqrt(mc + EPS)) * gradients.g_c
+    M = mU, mW, mV, mb, mc
+    return M
+
+'''def update_weights_GD(rnn, gradients, M):
+    rnn.weights_U = rnn.weights_U - ETA * rnn.gra_U
+    rnn.weights_W = rnn.weights_W - ETA * rnn.weights_W
+    rnn.weights_V = rnn.weights_V - ETA * rnn.weights_V
+    rnn.bias_b = rnn.bias_b - ETA * rnn.bias_b
+    rnn.bias_c = rnn.bias_c - ETA * rnn.bias_c'''
 
 # LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
 #####################################################################
