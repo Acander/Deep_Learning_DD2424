@@ -27,6 +27,16 @@ class Gradients:
         self.g_c = g_c
         self.n_fields = 5
 
+    def clip_gradients(self):
+        self.g_U = self.clip(self.g_U)
+        self.g_W = self.clip(self.g_W)
+        self.g_V = self.clip(self.g_V)
+        self.g_b = self.clip(self.g_b)
+        self.g_c = self.clip(self.g_c)
+
+    def clip(self, grad):
+        return max(min(grad, 5), -5)
+
 def synthesize_sequence(rnn, h0, x0, n, chars):
     ht = h0
     xt = x0
@@ -105,7 +115,7 @@ def compute_gradients(X, Y, h, rnn):
 
     for i in range(1, tao):
         dW += np.reshape(da[i], (len(da[i]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
-        dV += np.reshape(dO[i-1], (len(dO[i-1]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1]))) #TODO CHECK IF BOTH SHOULD BE TRANSPOSED
+        dV += np.reshape(dO[i-1], (len(dO[i-1]), 1)) @ np.reshape(H[i - 1], (1, len(H[i - 1])))
 
     dV += np.reshape(dO[tao-1], (len(dO[tao-1]), 1)) @ np.reshape(H[tao - 1], (1, len(H[tao - 1])))
 
@@ -114,8 +124,11 @@ def compute_gradients(X, Y, h, rnn):
     dU = da.transpose() @ X
 
     h = H[tao-1]
+
     gradients = Gradients(dU, dW, dV, db, dc)
+    gradients.clip_gradients()
     return gradients, loss
+
 
 #LOAD BOOK DATA AND CREATE LIST OF UNIQUE CHARS
 #####################################################################
