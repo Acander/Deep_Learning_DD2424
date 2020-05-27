@@ -45,7 +45,9 @@ class Gradients:
         self.g_c = self.clip(self.g_c)
 
     def clip(self, grad):
-        return max(min(grad, 5), -5)
+        five = np.ones(np.shape(grad)) * 5
+        negative_five = np.ones(np.shape(grad)) * (-5)
+        return np.maximum(np.minimum(grad, five), negative_five)
 
 
 def saveRNN(rnn):
@@ -150,7 +152,10 @@ def compute_gradients(X, Y, h, rnn, smooth_loss):
     gradients = Gradients(dU, dW, dV, db, dc)
     gradients.clip_gradients()
 
-    smooth_loss = 0.999 * smooth_loss + 0.001 * loss
+    if smooth_loss is None:
+        smooth_loss = loss
+    else:
+        smooth_loss = 0.999 * smooth_loss + 0.001 * loss
 
     return gradients, smooth_loss
 
@@ -158,8 +163,7 @@ def compute_gradients(X, Y, h, rnn, smooth_loss):
 def train_RNN():
     book = load_book()
     char_set = char_lookup_table(book)
-    e = 0
-    smooth_loss = 0
+    smooth_loss = None
 
     rnn = RNN(len(char_set))
     mU, mW, mV, mb, mc = 0, 0, 0, 0, 0
@@ -167,27 +171,31 @@ def train_RNN():
     x0 = np.zeros(rnn.k)
     x0[0] = 1
 
-    X, Y = create_train_dataset(book, TAO, char_set, e)
     hprev = np.zeros(rnn.m)
-    update_steps = int(len(book)/TAO*EPOCHS)
-    for i in range(update_steps):
-        gradients, smooth_loss = compute_gradients(X, Y, hprev, rnn, smooth_loss)
-        update_weights(rnn, gradients, M)
 
-        e += 1
-        if e > len(book) - TAO-1:
-            e = 0 # Reach end of book
+    smooth_loss_data = []
 
-        if i % SYNTH_STEP:
-            synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set)
+    print("Starting training")
+    print("Nr of Epochs: ", EPOCHS)
 
-        if i % LOSS_PRINT_STEP:
-            print("iter =", i, "smooth_loss: ", smooth_loss)
-            plt.plot(i, )
+    for epoch in range(EPOCHS):
+        for e in range(0, len(book), TAO):
+            X, Y = create_train_dataset(book, TAO, char_set, e)
 
-    plt.xlabel('Update Step')
-    plt.ylabel('Smooth Loss')
-    plt.show()
+            gradients, smooth_loss = compute_gradients(X, Y, hprev, rnn, smooth_loss)
+            update_weights(rnn, gradients, M)
+
+            if e % LOSS_PRINT_STEP == 0:
+                print("Epoch:", epoch, "Iter =", e, "Smooth_loss: ", smooth_loss, "Percentage of epoch done:", e/len(book), "%")
+                smooth_loss_data.append(smooth_loss)
+
+            if e % SYNTH_STEP == 0:
+                print(synthesize_sequence(rnn, np.zeros(rnn.m), x0, SYNTH_LEN, char_set))
+
+        plt.plot(np.arange(np.size(smooth_loss)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
+        plt.xlabel('Update Step')
+        plt.ylabel('Smooth Loss')
+        plt.show()
 
     saveRNN(rnn)
 
@@ -392,10 +400,11 @@ def test():
 
 if __name__ == '__main__':
     # run()
+    train_RNN()
 
     # TESTING
     #######################################
     # sequence_testing()
     # dataset_testing()
-    test_back_prop()
+    #test_back_prop()
     # test()
