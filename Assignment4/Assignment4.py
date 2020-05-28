@@ -48,13 +48,13 @@ class Gradients:
         return np.maximum(np.minimum(grad, 5), -5)
 
 
-def saveRNN(rnn):
-    fileHandler = open(RNN_FILE_NAME, 'wb')
+def saveRNN(rnn, epoch):
+    fileHandler = open("TRAINED_RNN" + str(epoch) + ".obj", 'wb')
     pickle.dump(rnn, fileHandler)
 
 
 def loadRNN():
-    fileHandler = open(RNN_FILE_NAME, 'rb')
+    fileHandler = open("TRAINED_RNN0.obj", 'rb')
     return pickle.load(fileHandler)
 
 
@@ -201,7 +201,7 @@ def train_RNN():
         plt.ylabel('Smooth Loss')
         plt.show()
 
-        saveRNN(rnn)
+        saveRNN(rnn, epoch)
 
     #saveRNN(rnn)
 
@@ -294,7 +294,7 @@ def sequence_testing():
     print(final_sequence)
     print(''.join(final_sequence))'''
 
-    book = load_book()
+    '''book = load_book()
     char_set = char_lookup_table(book)
     print(char_set)
     rnn = RNN(len(char_set))
@@ -302,6 +302,14 @@ def sequence_testing():
     x0[0] = 1
     print(char_set[0])
     sequence = synthesize_sequence(rnn, np.zeros(rnn.m), x0, 10, char_set)
+    print(sequence)'''
+
+    book = load_book()
+    char_set = char_lookup_table(book)
+    rnn = loadRNN()
+    x0 = np.zeros(rnn.k)
+    x0[0] = 1
+    sequence = synthesize_sequence(rnn, np.zeros(rnn.m), x0, 1000, char_set)
     print(sequence)
 
 
@@ -433,11 +441,24 @@ def test():
 
 if __name__ == '__main__':
     # run()
-    train_RNN()
+    #train_RNN()
+
+    '''rnn = RNN(81)
+    saveRNN(rnn, 0)
+
+    rnnLoad = loadRNN()
+    print(rnn.weights_W == rnnLoad.weights_W)
+    print(rnn.weights_W)
+    print(rnnLoad.weights_W)'''
+
+    #rnn = loadRNN()
 
     # TESTING
     #######################################
-    # sequence_testing()
+    #sequence_testing()
     # dataset_testing()
     #test_back_prop()
     # test()
+
+    ### LOSSES
+    #Model 1: 46.862
