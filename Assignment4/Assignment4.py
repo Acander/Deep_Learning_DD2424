@@ -54,7 +54,7 @@ def saveRNN(rnn, epoch):
 
 
 def loadRNN():
-    fileHandler = open("TRAINED_RNN0.obj", 'rb')
+    fileHandler = open("TRAINED_RNN9.obj", 'rb')
     return pickle.load(fileHandler)
 
 
@@ -168,7 +168,7 @@ def train_RNN():
     M = mU, mW, mV, mb, mc
 
     smooth_loss_data = []
-
+    final_loss = []
     print("Starting training")
     print("Nr of Epochs: ", EPOCHS)
     print(int(len(book)/TAO))
@@ -190,18 +190,22 @@ def train_RNN():
                 smooth_loss_data.append(smooth_loss)
 
             if iter_step % SYNTH_STEP == 0:
-                print(synthesize_sequence(rnn, hprev, X[0], SYNTH_LEN, char_set))
+                print(synthesize_sequence(rnn, hprev, X[0], 1000, char_set))
 
             hprev = h
 
             iter_step += 1
 
-        plt.plot(np.arange(np.size(smooth_loss_data)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
+        '''plt.plot(np.arange(np.size(smooth_loss_data)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
         plt.xlabel('Update Step')
         plt.ylabel('Smooth Loss')
-        plt.show()
+        plt.show()'''
 
-        saveRNN(rnn, epoch)
+        final_loss.append(smooth_loss)
+
+        #saveRNN(rnn, epoch)
+
+    print("FINAL LOSSES:", final_loss)
 
     #saveRNN(rnn)
 
@@ -437,11 +441,20 @@ def test():
     array = np.array([0, 1, 0, 1, 0, 1])
     print(array.reshape((len(array), 1)))
 
-
+def test_best_model():
+    rnn = loadRNN()
+    book = load_book()
+    char_set = char_lookup_table(book)
+    x0 = np.zeros(rnn.k)
+    rand_index = np.random.randint(0, len(char_set)-1)
+    x0[rand_index] = 1
+    print(synthesize_sequence(rnn, np.zeros(rnn.m), x0, 10000, char_set))
 
 if __name__ == '__main__':
+    #test_best_model()
+
     # run()
-    #train_RNN()
+    train_RNN()
 
     '''rnn = RNN(81)
     saveRNN(rnn, 0)
