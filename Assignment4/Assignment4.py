@@ -7,7 +7,7 @@ from Assignment1.functions import softmax
 TAO = 25
 ETA = 0.1
 EPS = 1e-10
-EPOCHS = 2
+EPOCHS = 10
 SYNTH_LEN = 200
 SYNTH_STEP = 500
 LOSS_PRINT_STEP = 100
@@ -63,7 +63,8 @@ def synthesize_sequence(rnn, h0, x0, n, chars):
     xt = x0
     final_sequence = []
     for _ in range(n):
-        char_index, _ = forward_pass(rnn, ht, xt)
+        char_index, fp_output = forward_pass(rnn, ht, xt)
+        _, ht, _, _ = fp_output
         final_sequence.append(chars[char_index])
         xt = create_one_hot_encoding(char_index, rnn.k)
 
@@ -72,17 +73,10 @@ def synthesize_sequence(rnn, h0, x0, n, chars):
 
 def forward_pass(rnn, ht, xt):
     at = rnn.weights_W @ ht + rnn.weights_U @ xt + rnn.bias_b  # at = W ht−1 + Uxt + b (1)
-    '''print("W: ", rnn.weights_W)
-    print("U: ", rnn.weights_U)
-    print("b: ", rnn.bias_b)'''
     ht = np.tanh(at)  # ht = tanh(at) (2)
     ot = rnn.weights_V @ ht + rnn.bias_c  # ot = V ht + c (3)
     pt = softmax(ot)  # pt = SoftMax(ot)
     #print("--------------------------------------------------------")
-    '''print(at)
-    print(ht)
-    print(ot)
-    print(pt)'''
     char_index = np.random.choice(a=np.arange(0, rnn.k), size=1, p=pt)[0]
     fp_output = at, ht, ot, pt
     return char_index, fp_output
@@ -168,8 +162,8 @@ def train_RNN():
     char_set = char_lookup_table(book)
     smooth_loss = None
 
-    #rnn = RNN(len(char_set))
-    rnn = loadRNN()
+    rnn = RNN(len(char_set))
+    #rnn = loadRNN()
     mU, mW, mV, mb, mc = 0, 0, 0, 0, 0
     M = mU, mW, mV, mb, mc
 
@@ -199,6 +193,7 @@ def train_RNN():
                 print(synthesize_sequence(rnn, hprev, X[0], SYNTH_LEN, char_set))
 
             hprev = h
+
             iter_step += 1
 
         plt.plot(np.arange(np.size(smooth_loss_data)), np.array(smooth_loss_data), color='blue', label='Smooth Loss')
@@ -206,7 +201,9 @@ def train_RNN():
         plt.ylabel('Smooth Loss')
         plt.show()
 
-    saveRNN(rnn)
+        saveRNN(rnn)
+
+    #saveRNN(rnn)
 
 '''def update_weights(rnn, gradients, M):
     mU, mW, mV, mb, mc = M
